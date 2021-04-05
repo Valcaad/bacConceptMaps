@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+	<div class="content">
+		<div class="dropdown">
+			<button id="dropbtn" class="dropbtn">load concept map</button>
+			<div id="dropdownCont" class="dropdown-content">
+			</div>
+		</div>
+		<div id="loadedMap" class="loadedMap"></div>
+		<div class="concept_container">
+			<h3 id="concept_header">Concepts:</h3>
+			<ul id="concept_list" class="concept_list">
+
+			</ul>
+		</div>
+		<div class="relation_container">
+			<h3 id="relation_header">Relations:</h3>
+			<ul id="relation_list">
+
+			</ul>
+		</div>
+		<button id="addBtn">copy text</button>
+		<button id="highlightBtn">highlight concepts</button>
+		<button id="parseBtn">parse DOM</button>
+		<textarea id="feedback" class="feedback"></textarea>
+	</div>
+	<script src="popup.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,90 @@
+.content {
+  position: relative;
+  width: 500px;
+}
+
+.feedback {
+  width: 95%;
+}
+
+.loadedMap {
+  position:absolute;
+  left: 135px;
+  top: 10px;
+}
+
+.concept_container {
+  padding: 0px;
+
+}
+
+#concept_header {
+  margin:0px;
+  display:none;
+}
+
+.concept_list {
+  display: none;
+  padding-left: 0px;
+  margin-top: 0px;
+  height: 100px;
+  width: 100%;
+  overflow: hidden;
+  overflow-y: scroll;
+  border:black;
+  border-style:solid;
+  border-width: 1px;
+}
+
+#concept_list li {
+  color: black;
+  padding: 4px 4px;
+  text-decoration: none;
+  display: block;
+}
+
+#concept_list li:hover {
+  background-color: #ddd
+}
+
+.dropbtn {
+    background-color: #3498DB;
+    color: white;
+    padding: 12px;
+    font-size: 12px;
+    border: none;
+    cursor: pointer;
+}
+
+.dropbtn:hover, .dropbtn:focus {
+    background-color: #2980B9;
+  }
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+  }
+
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+  
+  /* Change color of dropdown links on hover */
+.dropdown-content a:hover {background-color: #ddd}
+
+.show {display:block;}
+
+
+
