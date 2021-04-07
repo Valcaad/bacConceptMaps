@@ -1,6 +1,6 @@
 {
-    "name": "Textextractor",
-    "description": "extract your text selection and store in local DB",
+    "name": "Concept Extractor",
+    "description": "load concept maps or extract from site",
     "version": "0.1.0",
     "manifest_version": 2,
     "background": {

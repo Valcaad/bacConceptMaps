@@ -47,6 +47,41 @@
   background-color: #ddd
 }
 
+
+.relation_container {
+  padding: 0px;
+
+}
+
+#relation_header {
+  margin:0px;
+  display:none;
+}
+
+.relation_list {
+  display: none;
+  padding-left: 0px;
+  margin-top: 0px;
+  height: 100px;
+  width: 100%;
+  overflow: hidden;
+  overflow-y: scroll;
+  border:black;
+  border-style:solid;
+  border-width: 1px;
+}
+
+#relation_list li {
+  color: black;
+  padding: 4px 4px;
+  text-decoration: none;
+  display: block;
+}
+
+#relation_list li:hover {
+  background-color: #ddd
+}
+
 .dropbtn {
     background-color: #3498DB;
     color: white;
