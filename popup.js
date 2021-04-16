@@ -80,26 +80,30 @@ document.getElementById("showToggle").addEventListener('click', () => {
 })
 
 //save textselection to db
-document.getElementById("addBtn").addEventListener('click', () => {
+document.getElementById("addBtn").addEventListener('click', async() => {
+
+    let [tab] = await chrome.tabs.query({active: true, currentWindow: true });
 
     function getText() {
         return window.getSelection().toString();
     }
-    chrome.tabs.executeScript({
-        code: '(' + getText + ')();'
-    }, (result) => {
 
-        let parse_request = analyse_selection(result);
+    chrome.scripting.executeScript({
+        target: {tabId: tab.id },
+        function: getText
+    }, (result) => {
+        console.log("this -->>")
+        console.log(result[0].result)
+        let parse_request = analyse_selection(result[0].result);
 
         parse_request.then(res => {
             parsedMap = res;
             displayMap = parsedMap;
             console.log(res);
             listConcepts(displayMap);
-        });
+        })
+    })
 
-
-    });
 
     show_loaded = false;
     document.getElementById("concept_header").style.display = "block";
@@ -108,14 +112,14 @@ document.getElementById("addBtn").addEventListener('click', () => {
 });
 
 async function analyse_selection(text) {
-    console.log(text[0]);
+    console.log(text);
     const response = await fetch(`${CONCEPT_MAP_SERVER}/api/concepts`, {
         method: 'POST',
         mode: 'cors',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ text: text[0] })
+        body: JSON.stringify({ text: text })
     });
     console.log("i did a backend request");
     const responseObject = await response.json();
@@ -124,20 +128,49 @@ async function analyse_selection(text) {
 }
 
 //parse DOM to text
-document.getElementById("parseBtn").addEventListener('click', () => {
+document.getElementById("parseBtn").addEventListener('click', async() => {
+
+    let [tab] = await chrome.tabs.query({active: true, currentWindow: true });
 
     function getDOM() {
-        return document.body.innerHTML;
+       return document.body.innerHTML;
     }
-    chrome.tabs.executeScript({
-        code: '(' + getDOM + ')();'
+
+    chrome.scripting.executeScript({
+        target: { tabId: tab.id},
+        function: getDOM
     }, (result) => {
-        chrome.runtime.sendMessage({
-            message: 'parse',
-            payload: result.toString()
+        let parse_request = parse_dom(result[0].result);
+
+        parse_request.then(res => {
+            parsedMap = res;
+            displayMap = parsedMap;
+            console.log(res);
+            listConcepts(displayMap);
         })
     })
 })
+
+
+async function parse_dom(dom) {
+    console.log("i am in the parse function");
+    console.log(dom);
+    const response = await fetch(`${CONCEPT_MAP_SERVER}/api/text`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: dom })
+    });
+    console.log("i did a backend request");
+    const responseObject = await response.json();
+    console.log(responseObject);
+
+    return responseObject;
+}
+
+
 
 //highlight all concepts
 document.getElementById("highlightBtn").addEventListener('click', event => {
@@ -156,6 +189,7 @@ document.getElementById("highlightBtn").addEventListener('click', event => {
 
 //handle concept map loading dropdown
 document.getElementById("dropbtn").addEventListener('click', event => {
+    console.log("getting keys");
     event.preventDefault();
 
     //get all keys from indexedDb
