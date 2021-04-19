@@ -8,19 +8,9 @@ chrome.runtime.onInstalled.addListener(() => {
 })
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    //save something to Storage
-    if (request.message === 'insert') {
-        let insert_request = insert_records(request.payload);
 
-        insert_request.then(res => {
-            chrome.runtime.sendMessage({
-                message: 'insert_success',
-                payload: res
-            });
-        });
-
-        //retreive a certain Map from Storage
-    } else if (request.message === 'get') {
+    //retreive a certain Map from Storage
+    if (request.message === 'get') {
         let get_request = get_record(request.payload);
 
         get_request.then(res => {
@@ -30,6 +20,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             });
         });
     }
+
     //retreive all keys from Storage
     else if (request.message === 'get_keys') {
         console.log("trying to get keys");
@@ -41,23 +32,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 payload: res
             });
         });
-    }
-      //parse Website DOM
-    else if (request.message === 'parse') {
-        console.log("received parse request");
-        let parse_request = parse_dom(request.payload);
-
-        parse_request.then(res => {
-            chrome.runtime.sendMessage({
-                message: 'parse_success',
-                payload: res
-            });
-        });
-
-    }
-    //highlight the concepts from parsed DOM
-    else if (request.message === 'highlight') {
-        console.log("received highlight request");
     
      //update an item in Storage
     } else if (request.message === 'update') {
@@ -106,6 +80,7 @@ function create_database() {
     }
 }
 
+//insert an array of new records into the indexedDB
 function insert_records(records) {
         if (db) {
             const insert_transaction = db.transaction("conceptMaps",
@@ -131,7 +106,7 @@ function insert_records(records) {
     
 }
 
-
+//retreive a specific item from indexedDB
 function get_record(name) {
     if (!db) {
 
@@ -166,6 +141,7 @@ function get_record(name) {
         });
 }
 
+//return all available keys in the concept Map indexedDB
 function get_keys() {
 
         const request = indexedDB.open('ConceptMapDB');
@@ -202,66 +178,4 @@ function get_keys() {
         } else{
             console.log("no db");
         }
-}
-
-async function parse_dom(dom) {
-        console.log("i am in the parse function");
-        const response = await fetch(`${CONCEPT_MAP_SERVER}/api/text`, {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ text: dom })
-        });
-        console.log("i did a backend request");
-        const responseObject = await response.json();
-        console.log(responseObject);
-
-        return responseObject;
-}
-
-function highlight_concepts(nodes) {
-    if (db) {
-
-        return new Promise((resolve, reject) => {
-
-            let code = ''
-
-            function highlight(keywords){
-                let content = document.body.innerHTML;
-                console.log("i try to transform content")
-                document.body.innerHTML = transformContent(content, keywords)
-                return "ok";                
-            }
-
-            function transformContent(content, keywords){
-                let temp = content;
-
-                keywords.forEach(keyword => {
-                    console.log("transforming keyword" + keyword)
-                    temp = temp.replace(new RegExp(keyword, 'ig'), wrapKeywordWithHTML(keyword))
-                })
-
-                return temp;
-            }
-
-            function wrapKeywordWithHTML(keyword){
-                console.log("i did a wrapperino")
-                return `<span style="background-color: yellow"> ${keyword} </span>`
-            }
-
-            chrome.scripting.executeScript({
-                function: highlight,
-                arguments:['crater']
-            }, (result) => {
-                console.log(result);
-                console.log("i tried to mark something");
-                resolve(result);
-            })
-
-            
-        })
-
-    }
 }

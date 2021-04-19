@@ -10,7 +10,8 @@
         {
             "matches": ["<all_urls>"],
             "js": [
-                "scripts/content_script.js"
+                "scripts/mark.min.js",
+                "scripts/storage.js"
             ],
             "run_at": "document_idle"
         }

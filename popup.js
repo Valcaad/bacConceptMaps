@@ -3,46 +3,23 @@ let loadedMap = null;
 let parsedMap = null;
 let mapKeys = null;
 let displayMap = null;
-let show_loaded = true;
+let show_known = true;
+
+checkStorage();
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.message === 'insert_success') {
-        document.getElementById("feedback").innerText = "text added";
-    }
 
-    else if (request.message === 'parse_success') {
+    //response from service worker when a map was retreived from indexedDB correctly
+    if (request.message === 'get_success') {
         if (request.payload) {
-            document.getElementById("feedback").innerText = request.payload
-            parsedMap = request.payload;
-            console.log(parsedMap)
-
-        }
-    }
-
-    else if (request.message === 'get_success') {
-        if (request.payload) {
-            document.getElementById("feedback").innerText = request.payload.name + ': ' + request.payload.text
             loadedMap = request.payload;
-            displayMap = loadedMap;
 
-
-            show_loaded = true;
-            listConcepts(displayMap);
-
-
-            document.getElementById("concept_header").style.display = "block";
-            document.getElementById("concept_header").innerText = "Loaded Map Concepts:"
-            concept_list.classList.add("show");
+            chrome.storage.local.set({ "loadedMap": loadedMap });
             document.getElementById("loadedMap").innerText = loadedMap.name + ".json";
+            document.getElementById("feedback").innerText = "successfully loaded Map: " + loadedMap.name;
         }
     }
-
-    else if (request.message === 'highlight_success') {
-        if (request.payload) {
-            document.getElementById("feedback").innerText = request.payload
-        }
-    }
-
+    //response form service worker when indexedDB keys were retreived correctly
     else if (request.message === 'get_keys_success') {
         if (request.payload) {
             mapKeys = request.payload;
@@ -58,133 +35,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 link.classList.toggle("menuItem");
                 dropdownMenu.appendChild(link);
             }
-
-            console.log(request.payload);
         }
     }
 })
-
-document.getElementById("showToggle").addEventListener('click', () => {
-    show_loaded = !show_loaded;
-
-    console.log("i tried to toggle");
-    if (show_loaded){
-        displayMap = loadedMap;
-        document.getElementById("concept_header").innerText = "Loaded Map Concepts:"
-    } else {
-        displayMap = parsedMap;
-        document.getElementById("concept_header").innerText = "Analysed Text Concepts:"
-    }
-
-    listConcepts(displayMap);
-})
-
-//save textselection to db
-document.getElementById("addBtn").addEventListener('click', async() => {
-
-    let [tab] = await chrome.tabs.query({active: true, currentWindow: true });
-
-    function getText() {
-        return window.getSelection().toString();
-    }
-
-    chrome.scripting.executeScript({
-        target: {tabId: tab.id },
-        function: getText
-    }, (result) => {
-        console.log("this -->>")
-        console.log(result[0].result)
-        let parse_request = analyse_selection(result[0].result);
-
-        parse_request.then(res => {
-            parsedMap = res;
-            displayMap = parsedMap;
-            console.log(res);
-            listConcepts(displayMap);
-        })
-    })
-
-
-    show_loaded = false;
-    document.getElementById("concept_header").style.display = "block";
-    document.getElementById("concept_header").innerText ="Analysed Text Concepts:"
-    concept_list.classList.add("show");
-});
-
-async function analyse_selection(text) {
-    console.log(text);
-    const response = await fetch(`${CONCEPT_MAP_SERVER}/api/concepts`, {
-        method: 'POST',
-        mode: 'cors',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ text: text })
-    });
-    console.log("i did a backend request");
-    const responseObject = await response.json();
-    console.log(responseObject);
-    return responseObject;
-}
-
-//parse DOM to text
-document.getElementById("parseBtn").addEventListener('click', async() => {
-
-    let [tab] = await chrome.tabs.query({active: true, currentWindow: true });
-
-    function getDOM() {
-       return document.body.innerHTML;
-    }
-
-    chrome.scripting.executeScript({
-        target: { tabId: tab.id},
-        function: getDOM
-    }, (result) => {
-        let parse_request = parse_dom(result[0].result);
-
-        parse_request.then(res => {
-            parsedMap = res;
-            displayMap = parsedMap;
-            console.log(res);
-            listConcepts(displayMap);
-        })
-    })
-})
-
-
-async function parse_dom(dom) {
-    console.log("i am in the parse function");
-    console.log(dom);
-    const response = await fetch(`${CONCEPT_MAP_SERVER}/api/text`, {
-        method: 'POST',
-        mode: 'cors',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ text: dom })
-    });
-    console.log("i did a backend request");
-    const responseObject = await response.json();
-    console.log(responseObject);
-
-    return responseObject;
-}
-
-
-
-//highlight all concepts
-document.getElementById("highlightBtn").addEventListener('click', event => {
-    event.preventDefault();
-
-    if (parsedMap) {
-        chrome.runtime.sendMessage({
-            message: 'highlight',
-            payload: parsedMap.nodes
-        });
-    }
-
-});
-
 
 
 //handle concept map loading dropdown
@@ -202,12 +55,13 @@ document.getElementById("dropbtn").addEventListener('click', event => {
 
 })
 
+//load a map from indexedDB when its name is clicked
 document.getElementById("dropdownCont").addEventListener('click', function (event) {
     let option = event.target.innerText;
     loadMap(option);
 })
 
-
+//request service worker to load a map
 function loadMap(name) {
     console.log("loading concept Map '" + name + "'");
     chrome.runtime.sendMessage({
@@ -230,11 +84,160 @@ window.onclick = function (event) {
     }
 }
 
-function listConcepts(map) {
+
+//switch between Concepts known in the loaded Map and all Concepts from parsed text
+document.getElementById("showToggle").addEventListener('click', () => {
+    show_known = !show_known;
+
+    console.log("i tried to toggle");
+    if (show_known) {
+        displayMap = compareToLoaded();
+        document.getElementById("concept_header").innerText = "Concepts known in loaded Map:"
+    } else {
+        displayMap = parsedMap;
+        document.getElementById("concept_header").innerText = "All Concepts from parsed text:"
+    }
+
+    listConcepts(displayMap);
+})
+
+
+//analyze text selection
+document.getElementById("selectionBtn").addEventListener('click', async () => {
+
+    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    function getText() {
+        return window.getSelection().toString();
+    }
+
+    chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        function: getText
+    }, (result) => {
+        let parse_request = analyse_selection(result[0].result);
+
+        parse_request.then(res => {
+            parsedMap = res;
+
+            displayMap = compareToLoaded();
+            chrome.storage.local.set({ 'parsedMap': parsedMap });
+            listConcepts(displayMap);
+        })
+    })
+
+
+    show_known = true;
+    document.getElementById("concept_header").style.display = "block";
+    document.getElementById("concept_header").innerText = "Known Concepts:"
+    concept_list.classList.add("show");
+});
+
+//request the backend server to analyse the text for concepts and relations
+async function analyse_selection(text) {
+    const response = await fetch(`${CONCEPT_MAP_SERVER}/api/concepts`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: text })
+    });
+    console.log("i did a backend request");
+    const responseObject = await response.json();
+    console.log(responseObject);
+    return responseObject;
+}
+
+//compare the concepts in the parsed map to the concepts in the loaded map
+//return only concepts known to both
+function compareToLoaded() {
+    let loadedConcepts = [];
+
+    loadedMap.nodes.forEach(node => {
+        loadedConcepts.push(node.data.label);
+    })
+
+    let edges = [];
+    let nodes = [];
+    let tempMap = { edges, nodes };
+    console.log("tempMap empty");
+    console.log(tempMap);
+    parsedMap.nodes.forEach(node => {
+
+        for (let concept of loadedConcepts) {
+            if (concept == node.data.label) {
+                tempMap.nodes.push(node);
+                console.log("Match: " + node.data.label);
+                parsedMap.edges.forEach(edge => {
+                    if (edge.data.source == node.data.id) {
+                        tempMap.edges.push(edge);
+                    }
+                })
+                break;
+            }
+        }
+    })
+
+    console.log("tempMap full");
+    console.log(tempMap);
+
+    return tempMap;
+
+}
+
+//parse DOM to text
+document.getElementById("parseBtn").addEventListener('click', async () => {
+
+    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    function getDOM() {
+        return document.body.innerHTML;
+    }
+
+    chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        function: getDOM
+    }, (result) => {
+        let parse_request = parse_dom(result[0].result);
+
+        parse_request.then(res => {
+            parsedMap = res;
+            displayMap = parsedMap;
+            console.log(res);
+            listConcepts(displayMap);
+        })
+    })
+})
+
+//request the backend server to parse the content of the site
+async function parse_dom(dom) {
+    console.log("i am in the parse function");
+    console.log(dom);
+    const response = await fetch(`${CONCEPT_MAP_SERVER}/api/text`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: dom })
+    });
+    console.log("i did a backend request");
+    const responseObject = await response.json();
+    console.log(responseObject);
+
+    return responseObject;
+}
+
+
+//list concepts on the popup screen
+async function listConcepts(map) {
     let concept_list = document.getElementById("concept_list");
     let concepts = map.nodes;
     console.log("i list concepts for ");
     console.log(map);
+
+    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
     concept_list.innerHTML = "";
 
@@ -242,18 +245,31 @@ function listConcepts(map) {
         let el = document.createElement("li");
         el.id = concept.data.id;
         el.innerText = concept.data.label;
-        el.addEventListener('click', (event) => {
-            listRelations(concept);
+        el.addEventListener('click', () => {
+            listRelations(concept, map);
+
+
+            chrome.storage.local.set({ 'highlight_keyword': concept.data.label });
+            chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ['scripts/highlight.js'],
+            }, (result) => {
+                console.log(result);
+                console.log("i tried to mark something");
+            })
+
+
             document.getElementById("feedback").innerText = "clicked on " + concept.data.id;
         })
         concept_list.appendChild(el);
     });
 }
 
-function listRelations(concept) {
+//list the relations of a specific concept from a specific map
+function listRelations(concept, map) {
     let relation_list = document.getElementById("relation_list");
     relation_list.innerHTML = "";
-    let edges = displayMap.edges;
+    let edges = map.edges;
     let concept_relations = [];
 
     edges.forEach(edge => {
@@ -263,22 +279,49 @@ function listRelations(concept) {
     })
 
     if (concept_relations.length == 0) {
-        let el = document.createElement("p");
+        let el = document.createElement("li");
         el.innerText = "No relations";
         relation_list.appendChild(el);
     }
     else {
         concept_relations.forEach(edge => {
             let el = document.createElement("li");
-            let targetConcept = displayMap.nodes.find(element => element.data.id == edge.data.target);
+            let targetConcept = parsedMap.nodes.find(element => element.data.id == edge.data.target);
             el.innerText = edge.data.label + " ... " + targetConcept.data.label;
             relation_list.appendChild(el);
         })
     }
 
-    let relation_header = document.getElementById("relation_header").style.display = "block";
+    document.getElementById("relation_header").style.display = "block";
     document.getElementById("relation_header").innerText = concept.data.label + " relations: ";
     relation_list.classList.add("show");
-    console.log(concept_relations);
+}
 
+//check if there are maps already in storage
+function checkStorage() {
+    chrome.storage.local.get('loadedMap', function (result) {
+        if (result.loadedMap) {
+            loadedMap = result.loadedMap;
+            document.getElementById("loadedMap").innerText = loadedMap.name + ".json";
+            document.getElementById("feedback").innerText = ("Map '" + loadedMap.name + "' is still loaded");
+            console.log(loadedMap);
+        } else {
+            console.log("no laoded map in storage");
+        }
+    })
+
+    chrome.storage.local.get('parsedMap', function (result) {
+        if (result.parsedMap) {
+            parsedMap = result.parsedMap;
+            console.log("retreived parsed map from storage");
+            listConcepts(compareToLoaded());
+
+            show_known = true;
+            document.getElementById("concept_header").style.display = "block";
+            document.getElementById("concept_header").innerText = "Concepts known in loaded Map:"
+            concept_list.classList.add("show");
+        } else {
+            console.log("no parsed Map in storage");
+        }
+    })
 }
