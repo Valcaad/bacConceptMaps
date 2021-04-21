@@ -8,12 +8,20 @@
 <body>
 	<div class="content">
 		<div class="dropdown">
-			<button id="dropbtn" class="dropbtn">load concept map</button>
+			<div class="dropdown-header">
+				<button id="dropbtn" class="dropbtn">load</button>
+				<div id="loadedMap" class="loadedMap"></div>
+			</div>
 			<div id="dropdownCont" class="dropdown-content">
 			</div>
 		</div>
 
-		<div id="loadedMap" class="loadedMap"></div>
+		<div class="buttons">
+			<button id="selectionBtn">analyze selection</button>
+			<button id="parseBtn">analyze site</button>
+			<button id="showToggle">known/all</button>
+		</div>
+
 
 		<div class="concept_container">
 			<h3 id="concept_header">Concepts:</h3>
@@ -29,9 +37,7 @@
 			</ul>
 		</div>
 
-		<button id="selectionBtn">analyze selection</button>
-		<button id="parseBtn">analyze site</button>
-		<button id="showToggle">known/all</button>
+
 		<textarea id="feedback" class="feedback"></textarea>
 	</div>
 	<script src="popup.js"></script>

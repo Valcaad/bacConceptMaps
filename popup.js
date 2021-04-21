@@ -191,29 +191,49 @@ document.getElementById("parseBtn").addEventListener('click', async () => {
 
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    function getDOM() {
-        return document.body.innerHTML;
-    }
-
     chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        function: getDOM
+        files: ["scripts/parseText.js"]
     }, (result) => {
-        let parse_request = parse_dom(result[0].result);
+        chrome.storage.local.get("pelements", function(result) {
+            if(result.pelements){
 
-        parse_request.then(res => {
-            parsedMap = res;
-            displayMap = parsedMap;
-            console.log(res);
-            listConcepts(displayMap);
-        })
+                let siteHTML = result.pelements.join(" ");
+
+                console.log(siteHTML);
+
+                let parse_request = parse_dom(siteHTML);
+
+                parse_request.then(res => {
+                    parsedMap = res;
+                    displayMap = parsedMap;
+                    listConcepts(displayMap);
+
+                    show_known = false;
+                    document.getElementById("concept_header").style.display = "block";
+                    document.getElementById("concept_header").innerText = "Concepts extracted from Text:"
+                    concept_list.classList.add("show");
+
+                    chrome.storage.local.remove("pelements");
+                })
+
+
+            }else{
+                console.log("something went wrong");
+            }
+
+        });
+
     })
+
+
 })
 
 //request the backend server to parse the content of the site
 async function parse_dom(dom) {
     console.log("i am in the parse function");
-    console.log(dom);
+    console.log("waiting for server response")
+
     const response = await fetch(`${CONCEPT_MAP_SERVER}/api/text`, {
         method: 'POST',
         mode: 'cors',
@@ -226,6 +246,7 @@ async function parse_dom(dom) {
     const responseObject = await response.json();
     console.log(responseObject);
 
+
     return responseObject;
 }
 
@@ -234,35 +255,45 @@ async function parse_dom(dom) {
 async function listConcepts(map) {
     let concept_list = document.getElementById("concept_list");
     let concepts = map.nodes;
-    console.log("i list concepts for ");
-    console.log(map);
-
-    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
     concept_list.innerHTML = "";
 
-    concepts.forEach(concept => {
-        let el = document.createElement("li");
-        el.id = concept.data.id;
-        el.innerText = concept.data.label;
-        el.addEventListener('click', () => {
-            listRelations(concept, map);
-
-
-            chrome.storage.local.set({ 'highlight_keyword': concept.data.label });
-            chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                files: ['scripts/highlight.js'],
-            }, (result) => {
-                console.log(result);
-                console.log("i tried to mark something");
-            })
-
-
-            document.getElementById("feedback").innerText = "clicked on " + concept.data.id;
-        })
+    if(map.nodes.length == 0){
+        const el = document.createElement("li");
+        el.innerText = "No known concepts";
         concept_list.appendChild(el);
-    });
+    } else {
+        console.log("i list concepts for ");
+        console.log(map);
+    
+        let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    
+        
+    
+        concepts.forEach(concept => {
+            let el = document.createElement("li");
+            el.id = concept.data.id;
+            el.innerText = concept.data.label;
+            el.addEventListener('click', () => {
+                listRelations(concept, map);
+    
+    
+                chrome.storage.local.set({ 'highlight_keyword': concept.data.label });
+                chrome.scripting.executeScript({
+                    target: { tabId: tab.id },
+                    files: ['scripts/highlight.js'],
+                }, (result) => {
+                    console.log(result);
+                    console.log("i tried to mark something");
+                })
+    
+    
+                document.getElementById("feedback").innerText = "clicked on " + concept.data.id;
+            })
+            concept_list.appendChild(el);
+        });
+    }
+    
 }
 
 //list the relations of a specific concept from a specific map

@@ -7,11 +7,7 @@
   width: 95%;
 }
 
-.loadedMap {
-  position:absolute;
-  left: 135px;
-  top: 10px;
-}
+
 
 .concept_container {
   padding: 0px;
@@ -82,12 +78,25 @@
   background-color: #ddd
 }
 
+.dropdown-header{
+  display:flex;
+  margin-bottom: 10px;
+}
+
+.loadedMap {
+  margin-left: 10px;
+}
+
 .dropbtn {
-    background-color: #3498DB;
-    color: white;
-    padding: 12px;
-    font-size: 12px;
-    border: none;
+  float:left;
+    border-radius: 25px;
+    border-color: gray;
+    border-width: 1px;
+    background-image: radial-gradient(white, rgb(211, 211, 211));
+    color: black;
+    padding-left: 7px;
+    padding-right: 7px;
+    font-size: 11px;
     cursor: pointer;
 }
 
@@ -98,6 +107,7 @@
 .dropdown {
     position: relative;
     display: inline-block;
+    
 }
 
 .dropdown-content {
@@ -118,6 +128,14 @@
   
   /* Change color of dropdown links on hover */
 .dropdown-content a:hover {background-color: #ddd}
+
+.buttons button {
+  border-radius: 25px;
+  border-color: gray;
+  border-width: 1px;
+  background-image: radial-gradient(white, rgb(211, 211, 211));
+  color: black;
+}
 
 .show {display:block;}
 
