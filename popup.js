@@ -120,6 +120,7 @@ document.getElementById("selectionBtn").addEventListener('click', async () => {
         parse_request.then(res => {
             parsedMap = res;
 
+            reformatMap(parsedMap);
             displayMap = compareToLoaded();
             chrome.storage.local.set({ 'parsedMap': parsedMap });
             listConcepts(displayMap);
@@ -200,12 +201,23 @@ document.getElementById("parseBtn").addEventListener('click', async () => {
 
                 let siteHTML = result.pelements.join(" ");
 
-                console.log(siteHTML);
+                document.getElementById("feedback").innerText = "waiting for server";
 
                 let parse_request = parse_dom(siteHTML);
 
                 parse_request.then(res => {
+                    document.getElementById("feedback").innerText = "done";
                     parsedMap = res;
+
+                    parsedMap.nodes.sort((a, b) => (a.data.occurrences.length > b.data.occurrences.length) ? -1 : ((b.data.occurrences.length > a.data.occurrences.length) ? 1 : 0))
+
+                    chrome.storage.local.set({ 'parsedMap': parsedMap });
+
+/*                     chrome.scripting.executeScript({
+                        target:{tabId: tab.id },
+                        files: ["scripts/concept_aggregation.js"]
+                    }); */
+
                     displayMap = parsedMap;
                     listConcepts(displayMap);
 
@@ -270,7 +282,13 @@ async function listConcepts(map) {
     
         
     
-        concepts.forEach(concept => {
+        let counter = 0;
+        for(const concept of concepts){
+            if(concept.data.is_named_entity || concept.data.is_pronoun){
+                counter++;
+                console.log(concept.data.label);
+                continue;
+            }
             let el = document.createElement("li");
             el.id = concept.data.id;
             el.innerText = concept.data.label;
@@ -278,7 +296,7 @@ async function listConcepts(map) {
                 listRelations(concept, map);
     
     
-                chrome.storage.local.set({ 'highlight_keyword': concept.data.label });
+                chrome.storage.local.set({ 'highlight_keywords': [concept.data.label] });
                 chrome.scripting.executeScript({
                     target: { tabId: tab.id },
                     files: ['scripts/highlight.js'],
@@ -291,7 +309,9 @@ async function listConcepts(map) {
                 document.getElementById("feedback").innerText = "clicked on " + concept.data.id;
             })
             concept_list.appendChild(el);
-        });
+
+        }
+        console.log("i removed " + counter + " concepts from the output");
     }
     
 }
@@ -308,6 +328,8 @@ function listRelations(concept, map) {
             concept_relations.push(edge);
         }
     })
+
+    concept_relations.sort((a,b) => ((a.data.occurrence.start < b.data.occurrence.start) ? -1 : (b.data.occurrence.start < a.data.occurrence.start) ? 1 : 0))
 
     if (concept_relations.length == 0) {
         let el = document.createElement("li");
@@ -355,4 +377,17 @@ function checkStorage() {
             console.log("no parsed Map in storage");
         }
     })
+}
+
+function reformatMap(map){
+
+    let nodesTemp = map.nodes;
+
+    for (let i = nodesTemp.length-1; i >= 0; i--) {
+        if(nodesTemp[i].data.is_pronoun === true){
+            nodesTemp.splice(i,1);
+        }
+    }
+
+    map.nodes = nodesTemp;
 }

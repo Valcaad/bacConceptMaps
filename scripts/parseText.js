@@ -2,10 +2,15 @@ function getDOM() {
     const ps = document.querySelectorAll("P");
     let parray =[];
     for (const p of ps) {
-        if((p.innerText.split(" ")).length <= 3){
+        if((p.innerText.split(" ")).length <= 5){
 
         } else {
-            parray.push(p.innerHTML);
+            let pp =p.innerHTML;
+            if(pp.match(/\[\d*\]/) != null){
+                pp = pp.replace(/\[\d*\]/ig,'');
+            }
+
+            parray.push(pp);
         }
 
     }
