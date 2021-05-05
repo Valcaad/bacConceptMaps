@@ -13,6 +13,9 @@
                 "scripts/mark.min.js",
                 "scripts/storage.js"
             ],
+            "css": [
+                "stylesheets/highlights.css"
+            ],
             "run_at": "document_idle"
         }
     ],
