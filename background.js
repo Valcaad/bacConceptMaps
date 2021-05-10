@@ -179,3 +179,75 @@ function get_keys() {
             console.log("no db");
         }
 }
+
+async function update_record(item){
+    let loadedMap;
+    await chrome.storage.local.get('loadedMap', function(result){
+        if(result.loadedMap){
+            loadedMap = result.loadedMap;
+
+            loadedMap = putItem(loadedMap, item);
+
+            if (!db) {
+
+                const request = indexedDB.open('ConceptMapDB');
+                request.onerror = function (event) {
+                    console.log("Problem opening DB.");
+                }
+                request.onupgradeneeded = function (event) {
+                    db = event.target.result;
+                }
+                request.onsuccess = function (event) {
+                    db = event.target.result;
+                    console.log("DB OPENED FOR GET Request.");
+                    db.onerror = function (event) {
+                        console.log("FAILED TO OPEN DB.")
+                    }
+                }
+            }
+        
+            if (db) {
+                const update_transaction = db.transaction("conceptMaps",
+                    "readwrite");
+                const objectStore = update_transaction.objectStore("conceptMaps");
+                return new Promise((resolve, reject) => {
+                    update_transaction.oncomplete = function () {
+                        console.log("ALL UPDATE TRANSACTIONS COMPLETE.");
+                        chrome.storage.local.set({"loadedMap": loadedMap});
+                        resolve(true);
+                    }
+                    update_transaction.onerror = function () {
+                        console.log("PROBLEM UPDATING RECORDS.")
+                        resolve(false);
+                    }
+                    objectStore.put(loadedMap);
+                        
+                    });
+                };
+        }
+    })
+    
+
+   
+}
+
+function putItem(loadedMap, item){
+    let node;
+    let edge = {"label": item.relation.data.label, "source": item.relation.data.source, "target": item.relation.data.target};
+
+    if(node = loadedMap.nodes.find(node => node.label === item.concept.data.label)){
+        edge.source = node.id;
+    } else{
+        loadedMap.nodes.push({"id": item.concept.data.id, "label": item.concept.data.label});
+    }
+    if(node = loadedMap.nodes.find(node => node.label === item.target.data.label)){
+        edge.target = node.id;
+    } else{
+        loadedMap.nodes.push({"id": item.target.data.id, "label": item.target.data.label});
+    }
+
+
+    loadedMap.edges.push(edge);
+
+    return loadedMap;
+}

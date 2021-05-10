@@ -1,7 +1,67 @@
 mark.known{
     background: rgb(66, 201, 13);
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+
 }
 
 mark.related{
     background: yellow;
+    position: relative;
+    display: inline-block;
 }
+
+.popup_content{
+    border: 1px solid #e3e3e3;
+    background: white;
+    width: 300px;
+    height: auto;
+    font-weight: 300;
+    color: rgb(39,44,45);
+    font-size: 13px;
+    z-index: 500;
+    position: absolute;
+    margin-top: 20px;
+    margin-left: -60px;
+    cursor: default;
+    display: inline-block;
+}
+
+.known > .popup_content {
+    visibility: hidden;
+    opacity:0;
+    transition: visibility 0s linear 0.4s, opacity 0.4s linear;
+}
+
+.known:hover > .popup_content {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0.1s;
+    -webkit-transition: opacity 0.1s ease-in;
+	-moz-transition: opacity 0.1s ease-in;
+	-ms-transition: opacity 0.1s ease-in;
+	-o-transition: opacity 0.1s ease-in;
+	transition: opacity 0.1s ease-in;
+}
+
+.relation_list {
+    padding-left: 0px;
+    margin-top: 0px;
+    margin-left: 0px;
+    height: 75px;
+    width: 100%;
+    overflow: hidden;
+    overflow-y: scroll;
+}
+.relation_list li {
+    color: black;
+    padding-left: 5px;
+    text-decoration: none;
+    display: block;
+  }
+  
+  .relation_list li:hover {
+    background-color: #ddd
+  }
+  

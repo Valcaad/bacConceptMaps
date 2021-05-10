@@ -1,5 +1,5 @@
 function clearMapsStorage(){
-    chrome.storage.local.remove(["loadedMap", "parsedMap", "highlightKeyword", "pelements"]);
+    chrome.storage.local.remove(["parsedMap", "highlightKeyword", "pelements"]);
 }
 
 clearMapsStorage();

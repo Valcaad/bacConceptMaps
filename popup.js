@@ -37,6 +37,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         }
     }
+
+    else if(request.message === 'update_success'){
+        if(request.payload){
+            console.log("i shouldhave updated");
+            loadMap(loadedMap.name);
+        }
+    }
 })
 
 
@@ -262,6 +269,8 @@ function findRelatedConcepts() {
     highlightRelevant();
 
     sortMapByOccurrence(tempMap);
+
+    chrome.storage.local.set({'relatedMap': tempMap});
     return tempMap;
 
 }

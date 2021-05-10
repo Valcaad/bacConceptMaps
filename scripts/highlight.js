@@ -10,7 +10,7 @@ async function highlight() {
 
         let instance = new Mark(document.body.querySelectorAll("P"));
 
-        instance.unmark();
+        unmark(instance);
 
         let options = {
             "acrossElements": true
@@ -22,6 +22,16 @@ async function highlight() {
         }
 
     })
+}
+
+function unmark(instance){
+
+    instance.unmark();
+
+    let popups = document.getElementsByClassName('popup_content');
+    for (i = popups.length-1; i >=0; i--) {
+        popups[i].remove();
+    }
 }
 
 highlight();
