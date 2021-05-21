@@ -24,24 +24,36 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.payload) {
             mapKeys = request.payload;
 
+
             let dropdownMenu = document.getElementById("dropdownCont");
 
             dropdownMenu.innerHTML = '';
 
-            for (let i = 0; i < mapKeys.length; i++) {
-                let link = document.createElement("a");
-                link.textContent = mapKeys[i];
-                link.id = "map" + mapKeys[i];
-                link.classList.toggle("menuItem");
+            if(mapKeys.length === 0){
+                let link = document.createElement('a');
+                link.textContent = "No Maps available!";
                 dropdownMenu.appendChild(link);
+            } else {
+                for (let i = 0; i < mapKeys.length; i++) {
+                    let link = document.createElement("a");
+                    link.textContent = mapKeys[i];
+                    link.id = "map" + mapKeys[i];
+                    link.classList.toggle("menuItem");
+                    dropdownMenu.appendChild(link);
+                }
             }
+
         }
     }
 
     else if(request.message === 'update_success'){
         if(request.payload){
-            console.log("i shouldhave updated");
             loadMap(loadedMap.name);
+        }
+    }
+    else if(request.message === 'create_success'){
+        if(request.payload){
+            document.getElementById("feedback").innerText = "New Map created";
         }
     }
 })
@@ -89,17 +101,36 @@ window.onclick = function (event) {
             }
         }
     }
+    if(!event.target.matches('#newmap_container') && !event.target.matches('.newmap') && !event.target.matches('#newmapName')){
+        document.getElementById('newmap_container').classList.remove('show');
+    }
 }
+
+document.getElementById("newmap").addEventListener('click', () =>{
+
+    document.getElementById("newmap_container").classList.toggle("show");
+})
+
+document.getElementById("newmapSubmit").addEventListener('click', () => {
+    let text = document.getElementById("newmapName").value;
+    console.log(text);
+    if(!text){
+        alert("You need to enter a name");
+    } else {
+        chrome.runtime.sendMessage({
+            message: 'create',
+            payload: text
+        });
+
+        document.getElementById("newmapName").value = "";
+    }
+})
 
 //display only concepts that relate to concepts in the loaded Map
 //highlight interesting
 document.getElementById("showInteresting").addEventListener('click', () => {
     console.log("showing potentially interesting concepts");
-    if(relatedMap){
-        highlightRelevant();
-        listConcepts(relatedMap);
-        document.getElementById("concept_header").innerText ="Concepts related to loaded Map:";
-    } else if (loadedMap && parsedMap) {
+    if (loadedMap && parsedMap) {
         listConcepts(relatedMap = findRelatedConcepts());
         document.getElementById("concept_header").innerText ="Concepts related to loaded Map:";
     } else {
@@ -263,8 +294,14 @@ function findRelatedConcepts() {
         }
     }
 
-    const LabelsUniq = [...new Set(relatedLabels)];
-    chrome.storage.local.set({"relatedKeywords": LabelsUniq});
+    let LabelsUniq = new Set(relatedLabels);
+    for (const label of LabelsUniq) {
+        if(knownLabels.includes(label)){
+            LabelsUniq.delete(label);
+        }
+    }
+    const relatedKeywords = [...LabelsUniq];
+    chrome.storage.local.set({"relatedKeywords": relatedKeywords});
 
     highlightRelevant();
 
@@ -316,7 +353,7 @@ async function listConcepts(map) {
             el.innerText = concept.data.label;
             el.addEventListener('click', () => {
                 listRelations(concept, map);
-                chrome.storage.local.set({ 'highlight_keywords': [concept.data.label] });
+                chrome.storage.local.set({ 'highlight_keywords': [concept.data.label.toLowerCase()] });
                 chrome.scripting.executeScript({
                     target: { tabId: tab.id },
                     files: ['scripts/highlight.js'],

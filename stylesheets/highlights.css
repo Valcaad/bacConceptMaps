@@ -28,13 +28,13 @@ mark.related{
     display: inline-block;
 }
 
-.known > .popup_content {
+.known > .popup_content, .related > .popup_content{
     visibility: hidden;
     opacity:0;
     transition: visibility 0s linear 0.4s, opacity 0.4s linear;
 }
 
-.known:hover > .popup_content {
+.known:hover > .popup_content, .related:hover > .popup_content {
     visibility: visible;
     opacity: 1;
     transition-delay: 0.1s;
