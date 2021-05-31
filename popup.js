@@ -29,7 +29,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
             dropdownMenu.innerHTML = '';
 
-            if(mapKeys.length === 0){
+            if (mapKeys.length === 0) {
                 let link = document.createElement('a');
                 link.textContent = "No Maps available!";
                 dropdownMenu.appendChild(link);
@@ -46,13 +46,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
     }
 
-    else if(request.message === 'update_success'){
-        if(request.payload){
+    else if (request.message === 'update_success') {
+        if (request.payload) {
             loadMap(loadedMap.name);
         }
     }
-    else if(request.message === 'create_success'){
-        if(request.payload){
+    else if (request.message === 'create_success') {
+        if (request.payload) {
             document.getElementById("feedback").innerText = "New Map created";
         }
     }
@@ -101,12 +101,12 @@ window.onclick = function (event) {
             }
         }
     }
-    if(!event.target.matches('#newmap_container') && !event.target.matches('.newmap') && !event.target.matches('#newmapName')){
+    if (!event.target.matches('#newmap_container') && !event.target.matches('.newmap') && !event.target.matches('#newmapName')) {
         document.getElementById('newmap_container').classList.remove('show');
     }
 }
 
-document.getElementById("newmap").addEventListener('click', () =>{
+document.getElementById("newmap").addEventListener('click', () => {
 
     document.getElementById("newmap_container").classList.toggle("show");
 })
@@ -114,7 +114,7 @@ document.getElementById("newmap").addEventListener('click', () =>{
 document.getElementById("newmapSubmit").addEventListener('click', () => {
     let text = document.getElementById("newmapName").value;
     console.log(text);
-    if(!text){
+    if (!text) {
         alert("You need to enter a name");
     } else {
         chrome.runtime.sendMessage({
@@ -132,7 +132,7 @@ document.getElementById("showInteresting").addEventListener('click', () => {
     console.log("showing potentially interesting concepts");
     if (loadedMap && parsedMap) {
         listConcepts(relatedMap = findRelatedConcepts());
-        document.getElementById("concept_header").innerText ="Concepts related to loaded Map:";
+        document.getElementById("concept_header").innerText = "Concepts related to loaded Map:";
     } else {
         document.getElementById("feedback").innerText = "cannot perform this action";
     }
@@ -141,13 +141,45 @@ document.getElementById("showInteresting").addEventListener('click', () => {
 //display all concepts from the parsed text
 document.getElementById("showAll").addEventListener('click', () => {
     console.log("showing all concepts from text");
-    if(parsedMap){
+    if (parsedMap) {
         listConcepts(parsedMap);
+
+        if (loadedMap) {
+            showNewConcepts();
+        }
+
         document.getElementById("concept_header").innerText = "All Concepts from Text:";
     } else {
         document.getElementById("feedback").innerText = "something went wrong";
     }
 })
+
+async function showNewConcepts() {
+
+    const unknownConcepts = [];
+    let count = 0;
+    checkUnknown: for (const node of parsedMap.nodes) {
+        for (const loadedNode of loadedMap.nodes) {
+            if (node.data.label.toLowerCase() === loadedNode.label.toLowerCase()) {
+                continue checkUnknown;
+            }
+        }
+        unknownConcepts.unshift(node);
+        count++;
+        if(count === 10){
+            break;
+        }
+    }
+
+    chrome.storage.local.set({"unknownConcepts": unknownConcepts});
+
+
+    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ["scripts/highlight_new.js"]
+    });
+}
 
 
 
@@ -162,8 +194,8 @@ document.getElementById("parseBtn").addEventListener('click', async () => {
         target: { tabId: tab.id },
         files: ["scripts/parseText.js"]
     }, (result) => {
-        chrome.storage.local.get("pelements", function(result) {
-            if(result.pelements){
+        chrome.storage.local.get("pelements", function (result) {
+            if (result.pelements) {
 
                 let siteHTML = result.pelements.join(" ");
 
@@ -179,12 +211,12 @@ document.getElementById("parseBtn").addEventListener('click', async () => {
 
                     chrome.storage.local.set({ 'parsedMap': parsedMap });
 
-/*                     chrome.scripting.executeScript({
-                        target:{tabId: tab.id },
-                        files: ["scripts/concept_aggregation.js"]
-                    }); */
+                    /*                     chrome.scripting.executeScript({
+                                            target:{tabId: tab.id },
+                                            files: ["scripts/concept_aggregation.js"]
+                                        }); */
 
-                    if(loadedMap){
+                    if (loadedMap) {
                         relatedMap = findRelatedConcepts();
                         listConcepts(relatedMap);
                         document.getElementById("concept_header").style.display = "block";
@@ -199,7 +231,7 @@ document.getElementById("parseBtn").addEventListener('click', async () => {
                     chrome.storage.local.remove("pelements");
                 })
 
-            }else{
+            } else {
                 console.log("something went wrong");
             }
         });
@@ -255,22 +287,22 @@ function findRelatedConcepts() {
         }
     }
 
-    chrome.storage.local.set({"knownKeywords": knownLabels})
+    chrome.storage.local.set({ "knownKeywords": knownLabels })
 
     let relatedNodes = [];
     let relatedLabels = [];
 
     for (const nodeId of knownNodes) {
         for (const edge of parsedMap.edges) {
-            if(edge.data.source === nodeId){
+            if (edge.data.source === nodeId) {
                 relatedNodes.push(edge.data.target);
             }
-            if(edge.data.target === nodeId){
+            if (edge.data.target === nodeId) {
                 relatedNodes.push(edge.data.source);
             }
         }
     }
-    
+
 
     for (const nodeId of knownNodes) {
         relatedNodes.unshift(nodeId);
@@ -280,12 +312,12 @@ function findRelatedConcepts() {
 
     for (const nodeId of uniq) {
         for (const node of parsedMap.nodes) {
-            if(nodeId === node.data.id){
+            if (nodeId === node.data.id) {
 
                 tempMap.nodes.push(node)
                 relatedLabels.push(node.data.label);
                 for (const edge of parsedMap.edges) {
-                    if(edge.data.source === nodeId){
+                    if (edge.data.source === nodeId) {
                         tempMap.edges.push(edge);
                     }
                 }
@@ -296,23 +328,23 @@ function findRelatedConcepts() {
 
     let LabelsUniq = new Set(relatedLabels);
     for (const label of LabelsUniq) {
-        if(knownLabels.includes(label)){
+        if (knownLabels.includes(label)) {
             LabelsUniq.delete(label);
         }
     }
     const relatedKeywords = [...LabelsUniq];
-    chrome.storage.local.set({"relatedKeywords": relatedKeywords});
+    chrome.storage.local.set({ "relatedKeywords": relatedKeywords });
 
     highlightRelevant();
 
     sortMapByOccurrence(tempMap);
 
-    chrome.storage.local.set({'relatedMap': tempMap});
+    chrome.storage.local.set({ 'relatedMap': tempMap });
     return tempMap;
 
 }
 
-async function highlightRelevant(){
+async function highlightRelevant() {
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
     chrome.scripting.executeScript({
@@ -331,19 +363,19 @@ async function listConcepts(map) {
 
     concept_list.innerHTML = "";
 
-    if(map.nodes.length == 0){
+    if (map.nodes.length == 0) {
         const el = document.createElement("li");
         el.innerText = "No known concepts";
         concept_list.appendChild(el);
     } else {
         console.log("i list concepts for ");
         console.log(map);
-    
+
         let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
+
         let counter = 0;
-        for(const concept of concepts){
-            if(concept.data.is_pronoun){
+        for (const concept of concepts) {
+            if (concept.data.is_pronoun) {
                 counter++;
                 console.log(concept.data.label);
                 continue;
@@ -368,7 +400,7 @@ async function listConcepts(map) {
         }
         console.log("i removed " + counter + " concepts from the output");
     }
-    
+
 }
 
 //list the relations of a specific concept from a specific map
@@ -383,7 +415,7 @@ function listRelations(concept, map) {
         }
     }
 
-    concept_relations.sort((a,b) => ((a.data.occurrence.start < b.data.occurrence.start) ? -1 : (b.data.occurrence.start < a.data.occurrence.start) ? 1 : 0))
+    concept_relations.sort((a, b) => ((a.data.occurrence.start < b.data.occurrence.start) ? -1 : (b.data.occurrence.start < a.data.occurrence.start) ? 1 : 0))
 
     if (concept_relations.length == 0) {
         let el = document.createElement("li");
@@ -421,7 +453,7 @@ function checkStorage() {
         if (result.parsedMap) {
             parsedMap = result.parsedMap;
             console.log("retreived parsed map from storage");
-            if(loadedMap){
+            if (loadedMap) {
                 listConcepts(findRelatedConcepts());
                 document.getElementById("concept_header").style.display = "block";
                 document.getElementById("concept_header").innerText = "Concepts related to loaded Map:";
@@ -438,7 +470,7 @@ function checkStorage() {
 }
 
 //sort the concepts in an map based on number of occurrences
-function sortMapByOccurrence(map){
+function sortMapByOccurrence(map) {
 
     map.nodes.sort((a, b) => (a.data.occurrences.length > b.data.occurrences.length) ? -1 : ((b.data.occurrences.length > a.data.occurrences.length) ? 1 : 0))
 
@@ -469,7 +501,7 @@ document.getElementById("selectionBtn").addEventListener('click', async () => {
 
             chrome.storage.local.set({ 'parsedMap': parsedMap });
 
-            if(loadedMap){
+            if (loadedMap) {
                 relatedMap = findRelatedConcepts();
                 listConcepts(relatedMap);
                 document.getElementById("concept_header").style.display = "block";

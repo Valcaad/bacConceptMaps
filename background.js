@@ -52,7 +52,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             });
         });
 
-        
+
     }
     //update an item in the Database
     else if (request.message === 'update') {
@@ -64,7 +64,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 payload: res
             });
         });
-        
+
     }
     //delete an item from the Database
     else if (request.message === 'delete') {
@@ -266,21 +266,30 @@ function update_record(item) {
 
 function putItem(loadedMap, item) {
     let node;
-    let edge = { "label": item.relation.data.label, "source": item.relation.data.source, "target": item.relation.data.target };
 
-    if (node = loadedMap.nodes.find(node => node.label === item.concept.data.label)) {
-        edge.source = node.id;
+    if (item.relation !== undefined && item.target !== undefined) {
+        let edge = { "label": item.relation.data.label, "source": item.relation.data.source, "target": item.relation.data.target };
+
+        if (node = loadedMap.nodes.find(node => node.label === item.concept.data.label)) {
+            edge.source = node.id;
+        } else {
+            loadedMap.nodes.push({ "id": item.concept.data.id, "label": item.concept.data.label });
+        }
+        if (node = loadedMap.nodes.find(node => node.label === item.target.data.label)) {
+            edge.target = node.id;
+        } else {
+            loadedMap.nodes.push({ "id": item.target.data.id, "label": item.target.data.label });
+        }
+
+
+        loadedMap.edges.push(edge);
     } else {
-        loadedMap.nodes.push({ "id": item.concept.data.id, "label": item.concept.data.label });
+        if (loadedMap.nodes.find(node => node.label === item.concept.data.label)) {
+            
+        } else {
+            loadedMap.nodes.push({ "id": item.concept.data.id, "label": item.concept.data.label });
+        }
     }
-    if (node = loadedMap.nodes.find(node => node.label === item.target.data.label)) {
-        edge.target = node.id;
-    } else {
-        loadedMap.nodes.push({ "id": item.target.data.id, "label": item.target.data.label });
-    }
-
-
-    loadedMap.edges.push(edge);
 
     return loadedMap;
 }
