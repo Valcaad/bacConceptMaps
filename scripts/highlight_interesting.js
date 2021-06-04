@@ -4,7 +4,8 @@ async function highlight_interesting() {
 
     let instance = new Mark(document.body.querySelectorAll("P"));
 
-    unmark(instance);
+    unmark(instance, undefined);
+    removeCanvases();
 
     await chrome.storage.local.get('relatedMap', function (result) {
         if (result.relatedMap) {
@@ -16,12 +17,15 @@ async function highlight_interesting() {
         keywords_known = filterForUnrelated(result.knownKeywords, relatedMap);
         
 
-        let options = {
-            "acrossElements": true,
-            "className": "known"
-        }
+
 
         for (const node of keywords_known) {
+
+            const classLabel = node.data.label.replace(/ /g, "_");
+            let options = {
+                "acrossElements": true,
+                "className": "known known_" + classLabel
+            }
             let regex = new RegExp(`\\b${node.data.label}\\b`, 'gi');
 
             instance.markRegExp(regex, options);
@@ -38,7 +42,7 @@ async function highlight_interesting() {
                     parent = parent.parentNode;
                 }
 
-                instance.unmark({ "className": "related" })
+                unmark(instance, { "className": "related" })
 
                 removeCanvases();
 
@@ -115,6 +119,14 @@ function markRelations(known, parent, relatedMap) {
                         removeCanvases();
                     })
 
+                    const popup = document.createElement('div');
+                    popup.classList.add("popup_content");
+
+                    popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to Map";
+
+                    targetElement.appendChild(popup);
+
+
                     const targetRect = targetElement.getBoundingClientRect();
                     if (sourceRect.top <= targetRect.top) {
                         
@@ -139,7 +151,7 @@ function markRelations(known, parent, relatedMap) {
                             //ctx.arcTo(((targetRect.left + sourceRect.right) / 2) - sourceRect.right, count % 2 == 0 ? 15 : 45, canvas.width, targetRect.top - sourceRect.top + 30, 10);
                             //ctx.lineTo(targetRect.left - sourceRect.right, targetRect.top - sourceRect.top + 30);
                             ctx.stroke();
-                        } else {
+                        } else if(sourceRect.left > targetRect.right){
                             canvas.width = sourceRect.left - targetRect.right;
                             ctx.lineWidth = 4;
                             ctx.strokeStyle = 'pink';
@@ -176,9 +188,13 @@ function removeCanvases() {
     }
 }
 
-function unmark(instance) {
+function unmark(instance, options) {
 
-    instance.unmark();
+    if(options === undefined){
+        instance.unmark();
+    } else {
+        instance.unmark(options);
+    }
 
     let popups = document.getElementsByClassName('popup_content');
     for (i = popups.length - 1; i >= 0; i--) {

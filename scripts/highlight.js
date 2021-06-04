@@ -18,6 +18,7 @@ async function highlight() {
         let instance = new Mark(document.body.querySelectorAll("P"));
 
         unmark(instance);
+        removeCanvases();
 
         let options = {
             "acrossElements": true,
@@ -83,6 +84,16 @@ function unmark(instance){
     let popups = document.getElementsByClassName('popup_content');
     for (i = popups.length-1; i >=0; i--) {
         popups[i].remove();
+    }
+}
+
+function removeCanvases() {
+    let canvases = document.getElementsByClassName("canvas_line");
+
+    if (canvases.length !== 0) {
+        for (j = canvases.length - 1; j >= 0; j--) {
+            canvases[j].parentNode.removeChild(canvases[j]);
+        }
     }
 }
 

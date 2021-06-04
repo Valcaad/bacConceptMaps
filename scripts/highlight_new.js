@@ -5,6 +5,7 @@ async function highlight_new() {
     let instance = new Mark(document.body.querySelectorAll("P"));
 
     unmark(instance);
+    removeCanvases();
 
     await chrome.storage.local.get('parsedMap', function (result) {
         if (result.parsedMap) {

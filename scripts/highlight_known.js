@@ -5,7 +5,8 @@ async function highlight_known() {
 
     let instance = new Mark(document.body.querySelectorAll("P"));
 
-    unmark(instance);
+    unmark(instance, undefined);
+    removeCanvases();
 
     await chrome.storage.local.get('relatedMap', function (result) {
         if (result.relatedMap) {
@@ -42,7 +43,8 @@ async function highlight_known() {
                     parent = parent.parentNode;
                 }
 
-                instance.unmark({ "className": "related" })
+                const options = { "className": "related" };
+                unmark(instance, options);
 
                 removeCanvases();
 
@@ -150,9 +152,16 @@ function markRelations(known, parent, relatedMap) {
                         removeCanvases();
                     })
 
+                    const popup = document.createElement('div');
+                    popup.classList.add("popup_content");
+
+                    popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to Map";
+
+                    targetElement.appendChild(popup);
+
                     const targetRect = targetElement.getBoundingClientRect();
                     if (sourceRect.top <= targetRect.top) {
-                        
+
                         const canvas = document.createElement("canvas");
                         canvas.style.zIndex = -1;
                         canvas.style.position = "absolute";
@@ -174,7 +183,7 @@ function markRelations(known, parent, relatedMap) {
                             //ctx.arcTo(((targetRect.left + sourceRect.right) / 2) - sourceRect.right, count % 2 == 0 ? 15 : 45, canvas.width, targetRect.top - sourceRect.top + 30, 10);
                             //ctx.lineTo(targetRect.left - sourceRect.right, targetRect.top - sourceRect.top + 30);
                             ctx.stroke();
-                        } else if(sourceRect.left > targetRect.right){
+                        } else if (sourceRect.left > targetRect.right) {
                             canvas.width = sourceRect.left - targetRect.right;
                             ctx.lineWidth = 4;
                             ctx.strokeStyle = 'pink';
@@ -210,9 +219,14 @@ function removeCanvases() {
     }
 }
 
-function unmark(instance) {
+function unmark(instance, options) {
 
-    instance.unmark();
+    if(options === undefined){
+        instance.unmark();
+    } else {
+        instance.unmark(options);
+    }
+
 
     let popups = document.getElementsByClassName('popup_content');
     for (i = popups.length - 1; i >= 0; i--) {
