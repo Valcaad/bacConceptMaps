@@ -132,6 +132,20 @@ document.getElementById("showInteresting").addEventListener('click', () => {
     console.log("showing potentially interesting concepts");
     if (loadedMap && parsedMap) {
         listConcepts(relatedMap = findRelatedConcepts());
+        highlightInteresting();
+        document.getElementById("concept_header").innerText = "Concepts related to loaded Map:";
+    } else {
+        document.getElementById("feedback").innerText = "cannot perform this action";
+    }
+})
+
+//display only concepts that relate to concepts in the loaded Map
+//highlight known
+document.getElementById("showKnown").addEventListener('click', () => {
+    console.log("showing potentially interesting concepts");
+    if (loadedMap && parsedMap) {
+        listConcepts(relatedMap = findRelatedConcepts());
+        highlightKnown();
         document.getElementById("concept_header").innerText = "Concepts related to loaded Map:";
     } else {
         document.getElementById("feedback").innerText = "cannot perform this action";
@@ -208,16 +222,13 @@ document.getElementById("parseBtn").addEventListener('click', async () => {
                     parsedMap = res;
 
                     sortMapByOccurrence(parsedMap);
+                    removePronouns(parsedMap);
 
                     chrome.storage.local.set({ 'parsedMap': parsedMap });
 
-                    /*                     chrome.scripting.executeScript({
-                                            target:{tabId: tab.id },
-                                            files: ["scripts/concept_aggregation.js"]
-                                        }); */
-
                     if (loadedMap) {
                         relatedMap = findRelatedConcepts();
+                        highlightInteresting();
                         listConcepts(relatedMap);
                         document.getElementById("concept_header").style.display = "block";
                         document.getElementById("concept_header").innerText = "Concepts related to loaded Map:";
@@ -281,7 +292,7 @@ function findRelatedConcepts() {
         for (const concept of loadedConcepts) {
             if (concept.toLowerCase() === node.data.label.toLowerCase()) {
                 knownNodes.push(node.data.id);
-                knownLabels.push(node.data.label);
+                knownLabels.push(node);
                 break;
             }
         }
@@ -335,8 +346,6 @@ function findRelatedConcepts() {
     const relatedKeywords = [...LabelsUniq];
     chrome.storage.local.set({ "relatedKeywords": relatedKeywords });
 
-    highlightRelevant();
-
     sortMapByOccurrence(tempMap);
 
     chrome.storage.local.set({ 'relatedMap': tempMap });
@@ -344,7 +353,19 @@ function findRelatedConcepts() {
 
 }
 
-async function highlightRelevant() {
+async function highlightInteresting() {
+    let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ["scripts/highlight_interesting.js"]
+    }, (result) => {
+
+    });
+}
+
+
+async function highlightKnown() {
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
     chrome.scripting.executeScript({
@@ -373,13 +394,8 @@ async function listConcepts(map) {
 
         let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-        let counter = 0;
         for (const concept of concepts) {
-            if (concept.data.is_pronoun) {
-                counter++;
-                console.log(concept.data.label);
-                continue;
-            }
+        
             let el = document.createElement("li");
             el.id = concept.data.id;
             el.innerText = concept.data.label;
@@ -398,7 +414,6 @@ async function listConcepts(map) {
             concept_list.appendChild(el);
 
         }
-        console.log("i removed " + counter + " concepts from the output");
     }
 
 }
@@ -455,6 +470,7 @@ function checkStorage() {
             console.log("retreived parsed map from storage");
             if (loadedMap) {
                 listConcepts(findRelatedConcepts());
+                highlightInteresting();
                 document.getElementById("concept_header").style.display = "block";
                 document.getElementById("concept_header").innerText = "Concepts related to loaded Map:";
             } else {
@@ -473,6 +489,12 @@ function checkStorage() {
 function sortMapByOccurrence(map) {
 
     map.nodes.sort((a, b) => (a.data.occurrences.length > b.data.occurrences.length) ? -1 : ((b.data.occurrences.length > a.data.occurrences.length) ? 1 : 0))
+
+}
+
+function removePronouns(map) {
+
+    map.nodes = map.nodes.filter(node => !node.data.is_pronoun);
 
 }
 
@@ -503,6 +525,7 @@ document.getElementById("selectionBtn").addEventListener('click', async () => {
 
             if (loadedMap) {
                 relatedMap = findRelatedConcepts();
+                highlightInteresting();
                 listConcepts(relatedMap);
                 document.getElementById("concept_header").style.display = "block";
                 document.getElementById("concept_header").innerText = "Concepts related to loaded Map:";

@@ -1,7 +1,6 @@
 async function highlight_known() {
 
     let keywords_known;
-    let keywords_related;
     let relatedMap;
 
     let instance = new Mark(document.body.querySelectorAll("P"));
@@ -14,32 +13,20 @@ async function highlight_known() {
         }
     })
 
-    /*     await chrome.storage.local.get('relatedKeywords', function (result){
-            keywords_related = result.relatedKeywords;
-    
-            console.log(keywords_related);
-    
-            let options = {
-                "acrossElements": true,
-                "className": "related"
-            }
-    
-            for (const keyword of keywords_related) {
-                let regex = new RegExp(`\\b${keyword}\\b`, 'gi');
-                instance.markRegExp(regex, options);
-            }
-        }) */
-
     await chrome.storage.local.get('knownKeywords', function (result) {
         keywords_known = result.knownKeywords;
 
-        let options = {
-            "acrossElements": true,
-            "className": "known"
-        }
+
 
         for (const keyword of keywords_known) {
-            let regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+
+            const classLabel = keyword.data.label.replace(/ /g, "_");
+            let options = {
+                "acrossElements": true,
+                "className": "known known_" + classLabel
+            }
+
+            let regex = new RegExp(`\\b${keyword.data.label}\\b`, 'gi');
 
             instance.markRegExp(regex, options);
         }
@@ -133,19 +120,18 @@ function markRelations(known, parent, relatedMap) {
 
             let count = 0;
             for (const target of targets) {
+                const classLabel = target.data.label.replace(/ /g, "_");
                 const options = {
                     "acrossElements": true,
-                    "className": "related related_" + target.data.label
+                    "className": "related related_" + classLabel
                 }
                 let regex = new RegExp(`\\b${target.data.label}\\b`, 'gi');
                 instance.markRegExp(regex, options);
 
                 const sourceRect = known.getBoundingClientRect();
-                const targetElement = document.getElementsByClassName("related_" + target.data.label)[0];
+                const targetElement = document.getElementsByClassName("related_" + classLabel)[0];
 
                 const relation = relations.find(edge => edge.data.target === target.data.id);
-
-
 
                 if (targetElement) {
 
@@ -188,7 +174,7 @@ function markRelations(known, parent, relatedMap) {
                             //ctx.arcTo(((targetRect.left + sourceRect.right) / 2) - sourceRect.right, count % 2 == 0 ? 15 : 45, canvas.width, targetRect.top - sourceRect.top + 30, 10);
                             //ctx.lineTo(targetRect.left - sourceRect.right, targetRect.top - sourceRect.top + 30);
                             ctx.stroke();
-                        } else {
+                        } else if(sourceRect.left > targetRect.right){
                             canvas.width = sourceRect.left - targetRect.right;
                             ctx.lineWidth = 4;
                             ctx.strokeStyle = 'pink';

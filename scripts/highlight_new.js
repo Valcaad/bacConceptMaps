@@ -18,9 +18,10 @@ async function highlight_new() {
 
 
             for (const node of unknownConcepts) {
+                const classLabel = node.data.label.replace(/ /g, "_");
                 let options = {
                     "acrossElements": true,
-                    "className": "new new_" + node.data.label
+                    "className": "new new_" + classLabel
                 }
 
                 let regex = new RegExp(`\\b${node.data.label}\\b`, 'gi');

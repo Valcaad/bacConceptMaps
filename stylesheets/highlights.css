@@ -10,6 +10,11 @@ mark.related{
     background: yellow;
     position: relative;
     display: inline-block;
+    cursor: pointer;
+}
+
+mark.new{
+    cursor: pointer;
 }
 
 .popup_content{
