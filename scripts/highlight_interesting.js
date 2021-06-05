@@ -104,31 +104,32 @@ function markRelations(known, parent, relatedMap) {
 
                 if (targetElement) {
 
-                    targetElement.addEventListener('click', function (event) {
-                        event.preventDefault();
-                        let payload = {
-                            relation, concept, target
-                        }
-
-                        chrome.runtime.sendMessage({
-                            message: 'update',
-                            payload: payload
-                        });
-                        alert("add '" + concept.data.label + " ... " + relation.data.label + " ... " + target.data.label + "' to Map");
-
-                        removeCanvases();
-                    })
-
-                    const popup = document.createElement('div');
-                    popup.classList.add("popup_content");
-
-                    popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to Map";
-
-                    targetElement.appendChild(popup);
-
-
                     const targetRect = targetElement.getBoundingClientRect();
                     if (sourceRect.top <= targetRect.top) {
+
+
+                        targetElement.addEventListener('click', function (event) {
+                            event.preventDefault();
+                            let payload = {
+                                relation, concept, target
+                            }
+    
+                            chrome.runtime.sendMessage({
+                                message: 'update',
+                                payload: payload
+                            });
+                            alert("add '" + concept.data.label + " ... " + relation.data.label + " ... " + target.data.label + "' to Map");
+    
+                            removeCanvases();
+                        })
+    
+                        const popup = document.createElement('div');
+                        popup.classList.add("popup_content");
+    
+                        popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to Map";
+    
+                        targetElement.appendChild(popup);
+    
                         
                         const canvas = document.createElement("canvas");
                         canvas.style.zIndex = -1;
@@ -168,6 +169,8 @@ function markRelations(known, parent, relatedMap) {
                         known.appendChild(canvas);
                         //known.parentNode.insertBefore(canvas, known.nextSibling);
                         count++;
+                    } else {
+                        unmark(instance, { "className": "related_"+classLabel})
                     }
                 }
 

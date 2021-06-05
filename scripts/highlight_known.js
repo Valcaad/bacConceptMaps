@@ -1,120 +1,59 @@
 async function highlight_known() {
 
     let keywords_known;
-    let relatedMap;
+    let loadedMap;
 
     let instance = new Mark(document.body.querySelectorAll("P"));
 
     unmark(instance, undefined);
     removeCanvases();
 
-    await chrome.storage.local.get('relatedMap', function (result) {
-        if (result.relatedMap) {
-            relatedMap = result.relatedMap;
-        }
-    })
+    await chrome.storage.local.get('loadedMap', function (result) {
+        if (result.loadedMap) {
+            loadedMap = result.loadedMap;
 
-    await chrome.storage.local.get('knownKeywords', function (result) {
-        keywords_known = result.knownKeywords;
+            for (const node of loadedMap.nodes) {
 
-
-
-        for (const keyword of keywords_known) {
-
-            const classLabel = keyword.data.label.replace(/ /g, "_");
-            let options = {
-                "acrossElements": true,
-                "className": "known known_" + classLabel
+                const classLabel = node.label.replace(/ /g, "_");
+                let options = {
+                    "acrossElements": true,
+                    "className": "known known_" + classLabel
+                }
+        
+                let regex = new RegExp(`\\b${node.label}\\b`, 'gi');
+        
+                instance.markRegExp(regex, options);
             }
-
-            let regex = new RegExp(`\\b${keyword.data.label}\\b`, 'gi');
-
-            instance.markRegExp(regex, options);
-        }
-
-        let elements = document.getElementsByClassName("known");
-
-        for (let i = 0; i < elements.length; i++) {
-
-            elements[i].addEventListener('mouseover', function () {
+        
+            let elements = document.getElementsByClassName("known");
+        
+            for (let i = 0; i < elements.length; i++) {
+        
                 let parent = elements[i].parentNode;
-
+        
                 while (parent.nodeName != "P") {
                     parent = parent.parentNode;
                 }
-
-                const options = { "className": "related" };
-                unmark(instance, options);
-
-                removeCanvases();
-
-                markRelations(elements[i], parent, relatedMap);
-            })
-
-            /*  let popup = document.createElement('div');
-             popup.classList.add("popup_content");
- 
-             let concept = relatedMap.nodes.find(node => node.data.label.toLowerCase() === elements[i].innerText.toLowerCase());
- 
-             if (concept) {
-                 let relations = relatedMap.edges.filter(edge => edge.data.source === concept.data.id);
- 
-                 let list = document.createElement('ul');
-                 list.classList.add("relation_list");
-                 list.style.marginLeft = "0px";
-                 if (relations.length == 0) {
-                     const li = document.createElement('li');
-                     li.innerText = "No further relations";
-                     list.appendChild(li);
-                 } else {
-                     for (const relation of relations) {
-                         let li = document.createElement('li');
-                         let target = relatedMap.nodes.find(node => node.data.id === relation.data.target)
-                         let text = relation.data.label + " ... " + target.data.label;
-                         li.innerText = text;
- 
-                         li.addEventListener('click', function () {
-                             let payload = {
-                                 relation, concept, target
-                             }
- 
-                             chrome.runtime.sendMessage({
-                                 message: 'update',
-                                 payload: payload
-                             });
-                             alert("add '" + concept.data.label + " ... " + li.innerText + "' to Map");
-                         })
-                         list.appendChild(li);
- 
- 
-                     }
-                 }
- 
- 
-                 popup.appendChild(list);
-                 elements[i].appendChild(popup);
- 
-             } else {
-                 continue;
-             } */
-
+        
+                markRelations(elements[i], parent, loadedMap);
+        
+            }
         }
     })
-
 }
 
-function markRelations(known, parent, relatedMap) {
+function markRelations(known, parent, loadedMap) {
     let instance = new Mark(parent);
 
-    let concept = relatedMap.nodes.find(node => node.data.label.toLowerCase() === known.innerText.toLowerCase());
+    let concept = loadedMap.nodes.find(node => node.label.toLowerCase() === known.innerText.toLowerCase());
 
     if (concept) {
-        let relations = relatedMap.edges.filter(edge => edge.data.source === concept.data.id);
+        let relations = loadedMap.edges.filter(edge => edge.source === concept.id);
 
         if (relations.length !== 0) {
             let targets = [];
             for (const relation of relations) {
-                let target = relatedMap.nodes.find(node => node.data.id === relation.data.target);
+                let target = loadedMap.nodes.find(node => node.id === relation.target);
 
                 targets.push(target);
             }
@@ -122,45 +61,25 @@ function markRelations(known, parent, relatedMap) {
 
             let count = 0;
             for (const target of targets) {
-                const classLabel = target.data.label.replace(/ /g, "_");
-                const options = {
-                    "acrossElements": true,
-                    "className": "related related_" + classLabel
-                }
-                let regex = new RegExp(`\\b${target.data.label}\\b`, 'gi');
-                instance.markRegExp(regex, options);
 
                 const sourceRect = known.getBoundingClientRect();
-                const targetElement = document.getElementsByClassName("related_" + classLabel)[0];
+                const classLabel = target.label.replace(/ /g, "_");
+                const targetElement = parent.getElementsByClassName("known_" + classLabel)[0];
 
-                const relation = relations.find(edge => edge.data.target === target.data.id);
+                const relation = relations.find(edge => edge.target === target.id);
 
                 if (targetElement) {
 
-                    targetElement.addEventListener('click', function (event) {
-                        event.preventDefault();
-                        let payload = {
-                            relation, concept, target
-                        }
-
-                        chrome.runtime.sendMessage({
-                            message: 'update',
-                            payload: payload
-                        });
-                        alert("add '" + concept.data.label + " ... " + relation.data.label + " ... " + target.data.label + "' to Map");
-
-                        removeCanvases();
-                    })
-
-                    const popup = document.createElement('div');
-                    popup.classList.add("popup_content");
-
-                    popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to Map";
-
-                    targetElement.appendChild(popup);
 
                     const targetRect = targetElement.getBoundingClientRect();
                     if (sourceRect.top <= targetRect.top) {
+
+                        const popup = document.createElement('div');
+                        popup.classList.add("popup_content");
+
+                        popup.innerText = concept.label + " " + relation.label + " " + target.label;
+
+                        targetElement.appendChild(popup);
 
                         const canvas = document.createElement("canvas");
                         canvas.style.zIndex = -1;
@@ -221,7 +140,7 @@ function removeCanvases() {
 
 function unmark(instance, options) {
 
-    if(options === undefined){
+    if (options === undefined) {
         instance.unmark();
     } else {
         instance.unmark(options);

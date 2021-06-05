@@ -17,6 +17,12 @@ mark.new{
     cursor: pointer;
 }
 
+mark.clicked_on{
+    background: rgb(140, 200, 235);
+    position:relative;
+    display: inline-block;
+}
+
 .popup_content{
     border: 1px solid #e3e3e3;
     background: white;
