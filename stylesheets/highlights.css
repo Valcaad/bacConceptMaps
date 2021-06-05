@@ -37,6 +37,7 @@ mark.clicked_on{
     margin-left: -60px;
     cursor: default;
     display: inline-block;
+    white-space: pre-line;
 }
 
 .known > .popup_content, .related > .popup_content{

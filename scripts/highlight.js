@@ -31,6 +31,8 @@ async function highlight() {
 
         for (let i = 0; i < elements.length; i++) {
 
+            
+
             let parent = elements[i].parentNode;
 
             while (parent.nodeName != "P") {
@@ -41,6 +43,21 @@ async function highlight() {
 
             let concept = parsedMap.nodes.find(node => node.data.label.toLowerCase() === elements[i].innerText.toLowerCase());
             if (concept) {
+
+                elements[i].addEventListener('click', function (event) {
+                    event.preventDefault();
+                    let payload = {
+                        undefined, concept, undefined
+                    }
+    
+                    chrome.runtime.sendMessage({
+                        message: 'update',
+                        payload: payload
+                    });
+                    alert("add '" + concept.data.label + "' to Map");
+                })
+
+                
                 let relations = parsedMap.edges.filter(edge => edge.data.source === concept.data.id);
 
 
@@ -91,8 +108,6 @@ async function highlight() {
                                             payload: payload
                                         });
                                         alert("add '" + concept.data.label + " ... " + relation.data.label + " ... " + target.data.label + "' to Map");
-
-                                        removeCanvases();
                                     })
 
                                     const popup = document.createElement('div');

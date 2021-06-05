@@ -74,12 +74,20 @@ function markRelations(known, parent, loadedMap) {
                     const targetRect = targetElement.getBoundingClientRect();
                     if (sourceRect.top <= targetRect.top) {
 
-                        const popup = document.createElement('div');
-                        popup.classList.add("popup_content");
-
-                        popup.innerText = concept.label + " " + relation.label + " " + target.label;
-
-                        targetElement.appendChild(popup);
+                        if(targetElement.querySelector(".popup_content") !== null){
+                            const popup = targetElement.querySelector(".popup_content");
+                            if(!popup.textContent.includes(concept.label + " " + relation.label + " " + target.label)){
+                                popup.textContent += "\r\n " + concept.label + " " + relation.label + " " + target.label;
+                            }                            
+                        } else {
+                            const popup = document.createElement('div');
+                            popup.classList.add("popup_content");
+    
+                            popup.textContent = concept.label + " " + relation.label + " " + target.label;
+    
+                            targetElement.appendChild(popup);
+                        }
+                        
 
                         const canvas = document.createElement("canvas");
                         canvas.style.zIndex = -1;

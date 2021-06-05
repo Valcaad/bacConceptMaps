@@ -180,12 +180,12 @@ async function showNewConcepts() {
         }
         unknownConcepts.unshift(node);
         count++;
-        if(count === 10){
+        if (count === 10) {
             break;
         }
     }
 
-    chrome.storage.local.set({"unknownConcepts": unknownConcepts});
+    chrome.storage.local.set({ "unknownConcepts": unknownConcepts });
 
 
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -221,10 +221,13 @@ document.getElementById("parseBtn").addEventListener('click', async () => {
                     document.getElementById("feedback").innerText = "done";
                     parsedMap = res;
 
-                    sortMapByOccurrence(parsedMap);
                     removePronouns(parsedMap);
+                    aggregateConcepts(parsedMap);
+                    sortMapByOccurrence(parsedMap);
 
                     chrome.storage.local.set({ 'parsedMap': parsedMap });
+
+
 
                     if (loadedMap) {
                         relatedMap = findRelatedConcepts();
@@ -395,7 +398,7 @@ async function listConcepts(map) {
         let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
         for (const concept of concepts) {
-        
+
             let el = document.createElement("li");
             el.id = concept.data.id;
             el.innerText = concept.data.label;
@@ -496,6 +499,35 @@ function removePronouns(map) {
 
     map.nodes = map.nodes.filter(node => !node.data.is_pronoun);
 
+}
+
+function aggregateConcepts(parsedMap) {
+    let seen = {};
+    let reducedNodes = [];
+    let j = 0;
+
+    for (const node of parsedMap.nodes) {
+        if (seen[node.data.label] !== 1) {
+            seen[node.data.label] = 1;
+            reducedNodes[j++] = node;
+        } else {
+            let firstOccurrance = reducedNodes.find(first => first.data.label === node.data.label);
+            let sourceRelations = parsedMap.edges.filter(edge => edge.data.source === node.data.id);
+            let targetRelations = parsedMap.edges.filter(edge => edge.data.target === node.data.id);
+            if (sourceRelations) {
+                for (const edge of sourceRelations) {
+                    edge.data.source = firstOccurrance.data.id;
+                }
+            }
+            if (targetRelations) {
+                for (const edge of targetRelations) {
+                    edge.data.target = firstOccurrance.data.id;
+                }
+            }
+        }
+    }
+
+    parsedMap.nodes = reducedNodes;
 }
 
 

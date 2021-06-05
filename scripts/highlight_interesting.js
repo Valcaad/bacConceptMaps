@@ -15,7 +15,7 @@ async function highlight_interesting() {
 
     await chrome.storage.local.get('knownKeywords', function (result) {
         keywords_known = filterForUnrelated(result.knownKeywords, relatedMap);
-        
+
 
 
 
@@ -53,12 +53,12 @@ async function highlight_interesting() {
 
 }
 
-function filterForUnrelated(knownConcepts, relatedMap){
+function filterForUnrelated(knownConcepts, relatedMap) {
     const conceptsWithRelation = [];
 
     relationCheck: for (const node of knownConcepts) {
         for (const edge of relatedMap.edges) {
-            if(edge.data.source === node.data.id){
+            if (edge.data.source === node.data.id) {
                 conceptsWithRelation.push(node);
                 continue relationCheck;
             }
@@ -90,87 +90,98 @@ function markRelations(known, parent, relatedMap) {
                 const classLabel = target.data.label.replace(/ /g, "_");
                 const options = {
                     "acrossElements": true,
-                    "className": "related related_" + classLabel
+                    "className": "related related_" + classLabel,
+                    "exclude": [".popup_content"]
                 }
                 let regex = new RegExp(`\\b${target.data.label}\\b`, 'gi');
                 instance.markRegExp(regex, options);
 
                 const sourceRect = known.getBoundingClientRect();
-                const targetElement = document.getElementsByClassName("related_" + classLabel)[0];
+                const targetElements = document.getElementsByClassName("related_" + classLabel);
 
-                const relation = relations.find(edge => edge.data.target === target.data.id);
+                for (const targetElement of targetElements) {
+                    let targetParent = targetElement.parentNode;
+                    while (targetParent.nodeName != "P") {
+                        targetParent = targetParent.parentNode;
+                    }
+
+                    if (targetParent === parent) {
+
+                        const relation = relations.find(edge => edge.data.target === target.data.id);
+
+                        const targetRect = targetElement.getBoundingClientRect();
+                        if (sourceRect.top <= targetRect.top) {
+
+
+                            targetElement.addEventListener('click', function (event) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                let payload = {
+                                    relation, concept, target
+                                }
+
+                                chrome.runtime.sendMessage({
+                                    message: 'update',
+                                    payload: payload
+                                });
+                                alert("add '" + concept.data.label + " ... " + relation.data.label + " ... " + target.data.label + "' to Map");
+
+                                removeCanvases();
+                            })
+
+                            targetElement.addEventListener('mouseover', function (event) {
+                                event.stopPropagation();
+                            })
+
+                            const popup = document.createElement('div');
+                            popup.classList.add("popup_content");
+
+                            popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to Map";
+
+                            targetElement.appendChild(popup);
+
+
+                            const canvas = document.createElement("canvas");
+                            canvas.style.zIndex = -1;
+                            canvas.style.position = "absolute";
+                            canvas.style.top = -20 + "px";
+                            canvas.classList.add("canvas_line");
+
+                            const ctx = canvas.getContext('2d');
 
 
 
-                if (targetElement) {
-
-                    const targetRect = targetElement.getBoundingClientRect();
-                    if (sourceRect.top <= targetRect.top) {
-
-
-                        targetElement.addEventListener('click', function (event) {
-                            event.preventDefault();
-                            let payload = {
-                                relation, concept, target
+                            if (sourceRect.right < targetRect.left) {
+                                canvas.width = targetRect.left - sourceRect.right;
+                                ctx.lineWidth = 4;
+                                ctx.strokeStyle = 'pink';
+                                //ctx.globalAlpha = 0.9;
+                                ctx.beginPath();
+                                ctx.moveTo(0, 30);
+                                ctx.quadraticCurveTo(((targetRect.left + sourceRect.right) / 2) - sourceRect.right, count % 2 == 0 ? 15 : 45, targetRect.left - sourceRect.right, targetRect.top - sourceRect.top + 30)
+                                //ctx.arcTo(((targetRect.left + sourceRect.right) / 2) - sourceRect.right, count % 2 == 0 ? 15 : 45, canvas.width, targetRect.top - sourceRect.top + 30, 10);
+                                //ctx.lineTo(targetRect.left - sourceRect.right, targetRect.top - sourceRect.top + 30);
+                                ctx.stroke();
+                            } else if (sourceRect.left > targetRect.right) {
+                                canvas.width = sourceRect.left - targetRect.right;
+                                ctx.lineWidth = 4;
+                                ctx.strokeStyle = 'pink';
+                                ctx.globalAlpha = 0.9;
+                                canvas.style.left = - canvas.width + "px";
+                                ctx.beginPath();
+                                ctx.moveTo(canvas.width, 30);
+                                ctx.quadraticCurveTo(((targetRect.right + sourceRect.left) / 2) - targetRect.right, count % 2 == 0 ? 15 : 45, 0, targetRect.top - sourceRect.top + 30, 10)
+                                //ctx.arcTo(((targetRect.right + sourceRect.left) / 2) - targetRect.right, count % 2 == 0 ? 15 : 45, 0, targetRect.top - sourceRect.top + 30, 10);
+                                //ctx.lineTo(0, targetRect.top - sourceRect.top + 30);
+                                ctx.stroke();
                             }
-    
-                            chrome.runtime.sendMessage({
-                                message: 'update',
-                                payload: payload
-                            });
-                            alert("add '" + concept.data.label + " ... " + relation.data.label + " ... " + target.data.label + "' to Map");
-    
-                            removeCanvases();
-                        })
-    
-                        const popup = document.createElement('div');
-                        popup.classList.add("popup_content");
-    
-                        popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to Map";
-    
-                        targetElement.appendChild(popup);
-    
-                        
-                        const canvas = document.createElement("canvas");
-                        canvas.style.zIndex = -1;
-                        canvas.style.position = "absolute";
-                        canvas.style.top = -20 + "px";
-                        canvas.classList.add("canvas_line");
 
-                        const ctx = canvas.getContext('2d');
-
-
-
-                        if (sourceRect.right < targetRect.left) {
-                            canvas.width = targetRect.left - sourceRect.right;
-                            ctx.lineWidth = 4;
-                            ctx.strokeStyle = 'pink';
-                            //ctx.globalAlpha = 0.9;
-                            ctx.beginPath();
-                            ctx.moveTo(0, 30);
-                            ctx.quadraticCurveTo(((targetRect.left + sourceRect.right) / 2) - sourceRect.right, count % 2 == 0 ? 15 : 45, targetRect.left - sourceRect.right, targetRect.top - sourceRect.top + 30)
-                            //ctx.arcTo(((targetRect.left + sourceRect.right) / 2) - sourceRect.right, count % 2 == 0 ? 15 : 45, canvas.width, targetRect.top - sourceRect.top + 30, 10);
-                            //ctx.lineTo(targetRect.left - sourceRect.right, targetRect.top - sourceRect.top + 30);
-                            ctx.stroke();
-                        } else if(sourceRect.left > targetRect.right){
-                            canvas.width = sourceRect.left - targetRect.right;
-                            ctx.lineWidth = 4;
-                            ctx.strokeStyle = 'pink';
-                            ctx.globalAlpha = 0.9;
-                            canvas.style.left = - canvas.width + "px";
-                            ctx.beginPath();
-                            ctx.moveTo(canvas.width, 30);
-                            ctx.quadraticCurveTo(((targetRect.right + sourceRect.left) / 2) - targetRect.right, count % 2 == 0 ? 15 : 45, 0, targetRect.top - sourceRect.top + 30, 10)
-                            //ctx.arcTo(((targetRect.right + sourceRect.left) / 2) - targetRect.right, count % 2 == 0 ? 15 : 45, 0, targetRect.top - sourceRect.top + 30, 10);
-                            //ctx.lineTo(0, targetRect.top - sourceRect.top + 30);
-                            ctx.stroke();
+                            known.appendChild(canvas);
+                            //known.parentNode.insertBefore(canvas, known.nextSibling);
+                            count++;
+                        } else {
+                            unmark(instance, { "className": "related_" + classLabel })
                         }
-
-                        known.appendChild(canvas);
-                        //known.parentNode.insertBefore(canvas, known.nextSibling);
-                        count++;
-                    } else {
-                        unmark(instance, { "className": "related_"+classLabel})
                     }
                 }
 
@@ -193,7 +204,7 @@ function removeCanvases() {
 
 function unmark(instance, options) {
 
-    if(options === undefined){
+    if (options === undefined) {
         instance.unmark();
     } else {
         instance.unmark(options);
