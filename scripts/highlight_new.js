@@ -19,7 +19,7 @@ async function highlight_new() {
 
 
             for (const node of unknownConcepts) {
-                const classLabel = node.data.label.replace(/ /g, "_");
+                const classLabel = node.data.label.replace(/ /g, "_").replace(/'/g, "");
                 let options = {
                     "acrossElements": true,
                     "className": "new new_" + classLabel

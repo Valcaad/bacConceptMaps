@@ -14,7 +14,7 @@ async function highlight() {
 
         let instance = new Mark(document.body.querySelectorAll("P"));
 
-        unmark(instance);
+        unmark(instance, undefined);
         removeCanvases();
 
         let options = {
@@ -31,7 +31,7 @@ async function highlight() {
 
         for (let i = 0; i < elements.length; i++) {
 
-            
+
 
             let parent = elements[i].parentNode;
 
@@ -49,7 +49,7 @@ async function highlight() {
                     let payload = {
                         undefined, concept, undefined
                     }
-    
+
                     chrome.runtime.sendMessage({
                         message: 'update',
                         payload: payload
@@ -57,7 +57,7 @@ async function highlight() {
                     alert("add '" + concept.data.label + "' to Map");
                 })
 
-                
+
                 let relations = parsedMap.edges.filter(edge => edge.data.source === concept.data.id);
 
 
@@ -72,7 +72,8 @@ async function highlight() {
                     }
                     let count = 0;
                     for (const target of targets) {
-                        const classLabel = target.data.label.replace(/ /g, "_");
+                        const classLabel = target.data.label.replace(/ /g, "_").replace(/'/g, "");
+
                         options = {
                             "acrossElements": true,
                             "className": "related related_" + classLabel,
@@ -94,7 +95,7 @@ async function highlight() {
 
                                 const targetRect = targetElement.getBoundingClientRect();
 
-                                if (sourceRect.top <= targetRect.top) {
+                                if (sourceRect.top <= targetRect.top && !(sourceRect.top == targetRect.top && targetRect.right < sourceRect.left)) {
 
 
                                     targetElement.addEventListener('click', function (event) {
@@ -134,22 +135,40 @@ async function highlight() {
                                         ctx.strokeStyle = 'pink';
                                         ctx.beginPath();
                                         ctx.moveTo(0, 30);
-                                        ctx.quadraticCurveTo(((targetRect.left + sourceRect.right) / 2) - sourceRect.right, count % 2 == 0 ? 15 : 45, targetRect.left - sourceRect.right, targetRect.top - sourceRect.top + 30)
+                                        ctx.quadraticCurveTo(canvas.width / 2, count % 2 == 0 ? 15 : 50, canvas.width, targetRect.top - sourceRect.top + 30);
                                         ctx.stroke();
                                     } else if (sourceRect.left > targetRect.right) {
                                         canvas.width = sourceRect.left - targetRect.right;
                                         ctx.lineWidth = 4;
                                         ctx.strokeStyle = 'pink';
-                                        ctx.globalAlpha = 0.9;
                                         canvas.style.left = - canvas.width + "px";
                                         ctx.beginPath();
                                         ctx.moveTo(canvas.width, 30);
-                                        ctx.quadraticCurveTo(((targetRect.right + sourceRect.left) / 2) - targetRect.right, count % 2 == 0 ? 15 : 45, 0, targetRect.top - sourceRect.top + 30, 10)
+                                        ctx.quadraticCurveTo(canvas.width / 2, count % 2 == 0 ? 15 : 50, 0, targetRect.top - sourceRect.top + 30, 10);
+                                        ctx.stroke();
+                                    } else if (sourceRect.left > targetRect.left) {
+                                        canvas.width = (sourceRect.left - targetRect.left) / 2;
+                                        ctx.lineWidth = 4;
+                                        ctx.strokeStyle = 'pink';
+                                        canvas.style.left = - canvas.width + "px";
+                                        ctx.beginPath();
+                                        ctx.moveTo(canvas.width, 30);
+                                        ctx.quadraticCurveTo((canvas.width / 2), 15, 0, targetRect.top - sourceRect.top + 30, 10);
+                                        ctx.stroke();
+                                    } else if (sourceRect.right < targetRect.right) {
+                                        canvas.width = (targetRect.right - sourceRect.right) / 2;
+                                        ctx.lineWidth = 4;
+                                        ctx.strokeStyle = 'pink';
+                                        ctx.beginPath();
+                                        ctx.moveTo(0, 30);
+                                        ctx.quadraticCurveTo((canvas.width / 2), 15, canvas.width, targetRect.top - sourceRect.top + 30, 10);
                                         ctx.stroke();
                                     }
 
                                     elements[i].appendChild(canvas);
                                     count++;
+                                } else {
+                                    //unmark(parentInstance, { "className": "related_" + classLabel })
                                 }
                             }
                         }
@@ -162,9 +181,13 @@ async function highlight() {
     })
 }
 
-function unmark(instance) {
+function unmark(instance, options) {
 
-    instance.unmark();
+    if (options === undefined) {
+        instance.unmark();
+    } else {
+        instance.unmark(options);
+    }
 
     let popups = document.getElementsByClassName('popup_content');
     for (i = popups.length - 1; i >= 0; i--) {
