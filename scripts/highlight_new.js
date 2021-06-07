@@ -34,10 +34,20 @@ async function highlight_new() {
 
             for (let i = 0; i < elements.length; i++) {
 
+                const boundingRect = elements[i].getBoundingClientRect();
+
+                const concept = unknownConcepts.find(node => node.data.label.toLowerCase() === elements[i].innerText.toLowerCase());
+
+                const popup = document.createElement('div');
+                popup.classList.add("popup_content");
+
+                popup.style.left = (boundingRect.right - boundingRect.left) / 2 - 150 + "px";
+                popup.innerText = "click to add '" + concept.data.label + "' to Map";
+
+                elements[i].appendChild(popup);
+
                 elements[i].addEventListener('click', function (event) {
                     event.preventDefault();
-
-                    const concept = unknownConcepts.find(node => node.data.label.toLowerCase() === elements[i].innerText.toLowerCase());
 
                     let payload = {
                         undefined, concept, undefined

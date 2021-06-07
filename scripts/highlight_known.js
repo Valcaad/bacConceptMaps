@@ -19,24 +19,24 @@ async function highlight_known() {
                     "acrossElements": true,
                     "className": "known known_" + classLabel
                 }
-        
+
                 let regex = new RegExp(`\\b${node.label}\\b`, 'gi');
-        
+
                 instance.markRegExp(regex, options);
             }
-        
+
             let elements = document.getElementsByClassName("known");
-        
+
             for (let i = 0; i < elements.length; i++) {
-        
+
                 let parent = elements[i].parentNode;
-        
+
                 while (parent.nodeName != "P") {
                     parent = parent.parentNode;
                 }
-        
+
                 markRelations(elements[i], parent, loadedMap);
-        
+
             }
         }
     })
@@ -70,24 +70,29 @@ function markRelations(known, parent, loadedMap) {
 
                 if (targetElement) {
 
+                    targetElement.addEventListener('mouseover', function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    })
 
                     const targetRect = targetElement.getBoundingClientRect();
                     if (sourceRect.top <= targetRect.top && !(sourceRect.top == targetRect.top && targetRect.right < sourceRect.left)) {
 
-                        if(targetElement.querySelector(".popup_content") !== null){
+                        if (targetElement.querySelector(".popup_content") !== null) {
                             const popup = targetElement.querySelector(".popup_content");
-                            if(!popup.textContent.includes(concept.label + " " + relation.label + " " + target.label)){
+                            if (!popup.textContent.includes(concept.label + " " + relation.label + " " + target.label)) {
                                 popup.textContent += "\r\n " + concept.label + " " + relation.label + " " + target.label;
-                            }                            
+                            }
                         } else {
                             const popup = document.createElement('div');
                             popup.classList.add("popup_content");
-    
+
+                            popup.style.left = (targetRect.right - targetRect.left) / 2 - 150 + "px";
                             popup.textContent = concept.label + " " + relation.label + " " + target.label;
-    
+
                             targetElement.appendChild(popup);
                         }
-                        
+
 
                         const canvas = document.createElement("canvas");
                         canvas.style.zIndex = -1;
@@ -105,7 +110,7 @@ function markRelations(known, parent, loadedMap) {
                             ctx.strokeStyle = 'pink';
                             ctx.beginPath();
                             ctx.moveTo(0, 30);
-                            ctx.quadraticCurveTo(canvas.width/2, count % 2 == 0 ? 15 : 50, canvas.width, targetRect.top - sourceRect.top + 30);
+                            ctx.quadraticCurveTo(canvas.width / 2, count % 2 == 0 ? 15 : 50, canvas.width, targetRect.top - sourceRect.top + 30);
                             ctx.stroke();
                         } else if (sourceRect.left > targetRect.right) {
                             canvas.width = sourceRect.left - targetRect.right;
@@ -114,10 +119,10 @@ function markRelations(known, parent, loadedMap) {
                             canvas.style.left = - canvas.width + "px";
                             ctx.beginPath();
                             ctx.moveTo(canvas.width, 30);
-                            ctx.quadraticCurveTo(canvas.width/2, count % 2 == 0 ? 15 : 50, 0, targetRect.top - sourceRect.top + 30, 10);
+                            ctx.quadraticCurveTo(canvas.width / 2, count % 2 == 0 ? 15 : 50, 0, targetRect.top - sourceRect.top + 30, 10);
                             ctx.stroke();
                         } else if (sourceRect.left > targetRect.left) {
-                            canvas.width = (sourceRect.left - targetRect.left)/2;
+                            canvas.width = (sourceRect.left - targetRect.left) / 2;
                             ctx.lineWidth = 4;
                             ctx.strokeStyle = 'pink';
                             canvas.style.left = - canvas.width + "px";
@@ -126,7 +131,7 @@ function markRelations(known, parent, loadedMap) {
                             ctx.quadraticCurveTo((canvas.width / 2), 15, 0, targetRect.top - sourceRect.top + 30, 10);
                             ctx.stroke();
                         } else if (sourceRect.right < targetRect.right) {
-                            canvas.width = (targetRect.right - sourceRect.right)/2;
+                            canvas.width = (targetRect.right - sourceRect.right) / 2;
                             ctx.lineWidth = 4;
                             ctx.strokeStyle = 'pink';
                             ctx.beginPath();

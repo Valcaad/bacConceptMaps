@@ -41,8 +41,17 @@ async function highlight() {
 
             let parentInstance = new Mark(parent);
 
+            const boundingRect = elements[i].getBoundingClientRect();
             let concept = parsedMap.nodes.find(node => node.data.label.toLowerCase() === elements[i].innerText.toLowerCase());
             if (concept) {
+
+                const sourcePopup = document.createElement('div');
+                sourcePopup.classList.add("popup_content");
+
+                sourcePopup.style.left = (boundingRect.right - boundingRect.left) / 2 - 150 + "px";
+                sourcePopup.innerText = "click to add '" + concept.data.label + "' to Map";
+
+                elements[i].appendChild(sourcePopup);
 
                 elements[i].addEventListener('click', function (event) {
                     event.preventDefault();
@@ -114,6 +123,7 @@ async function highlight() {
                                     const popup = document.createElement('div');
                                     popup.classList.add("popup_content");
 
+                                    popup.style.left = (targetRect.right - targetRect.left) / 2 - 150 + "px";
                                     popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to Map";
 
                                     targetElement.appendChild(popup);

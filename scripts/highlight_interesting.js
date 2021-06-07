@@ -130,12 +130,14 @@ function markRelations(known, parent, relatedMap) {
                             })
 
                             targetElement.addEventListener('mouseover', function (event) {
+                                event.preventDefault();
                                 event.stopPropagation();
                             })
 
                             const popup = document.createElement('div');
                             popup.classList.add("popup_content");
 
+                            popup.style.left = (targetRect.right - targetRect.left) / 2 - 150 + "px";
                             popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to Map";
 
                             targetElement.appendChild(popup);
@@ -157,7 +159,7 @@ function markRelations(known, parent, relatedMap) {
                                 ctx.strokeStyle = 'pink';
                                 ctx.beginPath();
                                 ctx.moveTo(0, 30);
-                                ctx.quadraticCurveTo(canvas.width/2, count % 2 == 0 ? 15 : 50, canvas.width, targetRect.top - sourceRect.top + 30);
+                                ctx.quadraticCurveTo(canvas.width / 2, count % 2 == 0 ? 15 : 50, canvas.width, targetRect.top - sourceRect.top + 30);
                                 ctx.stroke();
                             } else if (sourceRect.left > targetRect.right) {
                                 canvas.width = sourceRect.left - targetRect.right;
@@ -166,10 +168,10 @@ function markRelations(known, parent, relatedMap) {
                                 canvas.style.left = - canvas.width + "px";
                                 ctx.beginPath();
                                 ctx.moveTo(canvas.width, 30);
-                                ctx.quadraticCurveTo(canvas.width/2, count % 2 == 0 ? 15 : 50, 0, targetRect.top - sourceRect.top + 30, 10);
+                                ctx.quadraticCurveTo(canvas.width / 2, count % 2 == 0 ? 15 : 50, 0, targetRect.top - sourceRect.top + 30, 10);
                                 ctx.stroke();
                             } else if (sourceRect.left > targetRect.left) {
-                                canvas.width = (sourceRect.left - targetRect.left)/2;
+                                canvas.width = (sourceRect.left - targetRect.left) / 2;
                                 ctx.lineWidth = 4;
                                 ctx.strokeStyle = 'pink';
                                 canvas.style.left = - canvas.width + "px";
@@ -178,7 +180,7 @@ function markRelations(known, parent, relatedMap) {
                                 ctx.quadraticCurveTo((canvas.width / 2), 15, 0, targetRect.top - sourceRect.top + 30, 10);
                                 ctx.stroke();
                             } else if (sourceRect.right < targetRect.right) {
-                                canvas.width = (targetRect.right - sourceRect.right)/2;
+                                canvas.width = (targetRect.right - sourceRect.right) / 2;
                                 ctx.lineWidth = 4;
                                 ctx.strokeStyle = 'pink';
                                 ctx.beginPath();
