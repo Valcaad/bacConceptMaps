@@ -264,6 +264,7 @@ function update_record(item) {
 
 }
 
+//put a new item in the selected map.
 function putItem(loadedMap, item) {
     let node;
 

@@ -18,6 +18,7 @@ async function highlight_new() {
             unknownConcepts = result.unknownConcepts;
 
 
+            //highlight the concepts listed in unknownConcepts
             for (const node of unknownConcepts) {
                 const classLabel = node.data.label.replace(/ /g, "_").replace(/'/g, "");
                 let options = {
@@ -26,7 +27,6 @@ async function highlight_new() {
                 }
 
                 let regex = new RegExp(`\\b${node.data.label}\\b`, 'gi');
-
                 instance.markRegExp(regex, options);
             }
 
@@ -38,6 +38,7 @@ async function highlight_new() {
 
                 const concept = unknownConcepts.find(node => node.data.label.toLowerCase() === elements[i].innerText.toLowerCase());
 
+                //add the tooltip for adding a concept
                 const popup = document.createElement('div');
                 popup.classList.add("popup_content");
 
@@ -46,6 +47,8 @@ async function highlight_new() {
 
                 elements[i].appendChild(popup);
 
+
+                //request to add the concept to current map
                 elements[i].addEventListener('click', function (event) {
                     event.preventDefault();
 

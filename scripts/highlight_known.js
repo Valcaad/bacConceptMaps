@@ -12,6 +12,7 @@ async function highlight_known() {
         if (result.loadedMap) {
             loadedMap = result.loadedMap;
 
+            //highlight all the concepts in the known map
             for (const node of loadedMap.nodes) {
 
                 const classLabel = node.label.replace(/ /g, "_");
@@ -43,7 +44,6 @@ async function highlight_known() {
 }
 
 function markRelations(known, parent, loadedMap) {
-    let instance = new Mark(parent);
 
     let concept = loadedMap.nodes.find(node => node.label.toLowerCase() === known.innerText.toLowerCase());
 
@@ -59,6 +59,7 @@ function markRelations(known, parent, loadedMap) {
             }
 
 
+            //identify the tragets of this concept
             let count = 0;
             for (const target of targets) {
 
@@ -78,6 +79,7 @@ function markRelations(known, parent, loadedMap) {
                     const targetRect = targetElement.getBoundingClientRect();
                     if (sourceRect.top <= targetRect.top && !(sourceRect.top == targetRect.top && targetRect.right < sourceRect.left)) {
 
+                        //add or extend the tooltip for drawn relations
                         if (targetElement.querySelector(".popup_content") !== null) {
                             const popup = targetElement.querySelector(".popup_content");
                             if (!popup.textContent.includes(concept.label + " " + relation.label + " " + target.label)) {
@@ -94,6 +96,7 @@ function markRelations(known, parent, loadedMap) {
                         }
 
 
+                        //create and add the canvas for drawing the relation link
                         const canvas = document.createElement("canvas");
                         canvas.style.zIndex = -1;
                         canvas.style.position = "absolute";
@@ -101,8 +104,6 @@ function markRelations(known, parent, loadedMap) {
                         canvas.classList.add("canvas_line");
 
                         const ctx = canvas.getContext('2d');
-
-
 
                         if (sourceRect.right < targetRect.left) {
                             canvas.width = targetRect.left - sourceRect.right;
@@ -168,7 +169,6 @@ function unmark(instance, options) {
     } else {
         instance.unmark(options);
     }
-
 
     let popups = document.getElementsByClassName('popup_content');
     for (i = popups.length - 1; i >= 0; i--) {

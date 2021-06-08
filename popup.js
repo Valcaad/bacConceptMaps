@@ -46,11 +46,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
     }
 
+    //response from service worker when an item was updated correctly
     else if (request.message === 'update_success') {
         if (request.payload) {
             loadMap(loadedMap.name);
         }
     }
+
+    //response from service worker when a new map was created successfully
     else if (request.message === 'create_success') {
         if (request.payload) {
             document.getElementById("feedback").innerText = "New Map created";
@@ -106,11 +109,13 @@ window.onclick = function (event) {
     }
 }
 
+//display the input field for creating a new map
 document.getElementById("newmap").addEventListener('click', () => {
 
     document.getElementById("newmap_container").classList.toggle("show");
 })
 
+//submit the create request for a new map
 document.getElementById("newmapSubmit").addEventListener('click', () => {
     let text = document.getElementById("newmapName").value;
     console.log(text);
@@ -153,6 +158,7 @@ document.getElementById("showKnown").addEventListener('click', () => {
 })
 
 //display all concepts from the parsed text
+//highlight 10 unknown concepts with the most occurrences in the text
 document.getElementById("showAll").addEventListener('click', () => {
     console.log("showing all concepts from text");
     if (parsedMap) {
@@ -356,6 +362,7 @@ function findRelatedConcepts() {
 
 }
 
+//execute the highlight_interesting script
 async function highlightInteresting() {
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -367,7 +374,7 @@ async function highlightInteresting() {
     });
 }
 
-
+//execute the highlight_known script
 async function highlightKnown() {
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -501,6 +508,7 @@ function removePronouns(map) {
 
 }
 
+//if two concepts share the same label, combine them into one
 function aggregateConcepts(parsedMap) {
     let seen = {};
     let reducedNodes = [];

@@ -31,8 +31,6 @@ async function highlight() {
 
         for (let i = 0; i < elements.length; i++) {
 
-
-
             let parent = elements[i].parentNode;
 
             while (parent.nodeName != "P") {
@@ -45,6 +43,7 @@ async function highlight() {
             let concept = parsedMap.nodes.find(node => node.data.label.toLowerCase() === elements[i].innerText.toLowerCase());
             if (concept) {
 
+                //add the tooltip for clicking a highlighted concept
                 const sourcePopup = document.createElement('div');
                 sourcePopup.classList.add("popup_content");
 
@@ -53,6 +52,8 @@ async function highlight() {
 
                 elements[i].appendChild(sourcePopup);
 
+
+                //request to add the clicked concept to the current map
                 elements[i].addEventListener('click', function (event) {
                     event.preventDefault();
                     let payload = {
@@ -66,9 +67,8 @@ async function highlight() {
                     alert("add '" + concept.data.label + "' to Map");
                 })
 
-
+                //get all relations of this concept
                 let relations = parsedMap.edges.filter(edge => edge.data.source === concept.data.id);
-
 
                 if (relations.length !== 0) {
 
@@ -79,6 +79,8 @@ async function highlight() {
 
                         targets.push(target);
                     }
+
+                    //highlight all the targets
                     let count = 0;
                     for (const target of targets) {
                         const classLabel = target.data.label.replace(/ /g, "_").replace(/'/g, "");
@@ -106,7 +108,7 @@ async function highlight() {
 
                                 if (sourceRect.top <= targetRect.top && !(sourceRect.top == targetRect.top && targetRect.right < sourceRect.left)) {
 
-
+                                    //add the relation, incl. source and target concept to the current map
                                     targetElement.addEventListener('click', function (event) {
                                         event.preventDefault();
                                         let payload = {
@@ -120,6 +122,7 @@ async function highlight() {
                                         alert("add '" + concept.data.label + " ... " + relation.data.label + " ... " + target.data.label + "' to Map");
                                     })
 
+                                    //add the tooltip for adding the relation
                                     const popup = document.createElement('div');
                                     popup.classList.add("popup_content");
 
@@ -129,6 +132,7 @@ async function highlight() {
                                     targetElement.appendChild(popup);
 
 
+                                    //create and add the canvas for the relation link
                                     const canvas = document.createElement("canvas");
                                     canvas.style.zIndex = -1;
                                     canvas.style.position = "absolute";
@@ -136,8 +140,6 @@ async function highlight() {
                                     canvas.classList.add("canvas_line");
 
                                     const ctx = canvas.getContext('2d');
-
-
 
                                     if (sourceRect.right < targetRect.left) {
                                         canvas.width = targetRect.left - sourceRect.right;

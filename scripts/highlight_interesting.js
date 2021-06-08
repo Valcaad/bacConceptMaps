@@ -16,12 +16,10 @@ async function highlight_interesting() {
     await chrome.storage.local.get('knownKeywords', function (result) {
         keywords_known = filterForUnrelated(result.knownKeywords, relatedMap);
 
-
-
-
+        //highlight the relevant concepts
         for (const node of keywords_known) {
 
-            const classLabel = node.data.label.replace(/ /g, "_");
+            const classLabel = node.data.label.replace(/ /g, "_").replace(/'/g, "");
             let options = {
                 "acrossElements": true,
                 "className": "known known_" + classLabel
@@ -33,6 +31,7 @@ async function highlight_interesting() {
 
         let elements = document.getElementsByClassName("known");
 
+        //add the mouseover event to highlight the concepts relations
         for (let i = 0; i < elements.length; i++) {
 
             elements[i].addEventListener('mouseover', function () {
@@ -53,6 +52,7 @@ async function highlight_interesting() {
 
 }
 
+//remove the concepts that do not have an outgoing relation
 function filterForUnrelated(knownConcepts, relatedMap) {
     const conceptsWithRelation = [];
 
@@ -76,6 +76,7 @@ function markRelations(known, parent, relatedMap) {
     if (concept) {
         let relations = relatedMap.edges.filter(edge => edge.data.source === concept.data.id);
 
+        //identify all the targets of the concept
         if (relations.length !== 0) {
             let targets = [];
             for (const relation of relations) {
@@ -85,6 +86,7 @@ function markRelations(known, parent, relatedMap) {
             }
 
 
+            //highlight all the targets
             let count = 0;
             for (const target of targets) {
                 const classLabel = target.data.label.replace(/ /g, "_").replace(/'/g, "");
@@ -112,7 +114,7 @@ function markRelations(known, parent, relatedMap) {
                         const targetRect = targetElement.getBoundingClientRect();
                         if (sourceRect.top <= targetRect.top && !(sourceRect.top == targetRect.top && targetRect.right < sourceRect.left)) {
 
-
+                            //request to add the relation, incl. source and target concept to the current map
                             targetElement.addEventListener('click', function (event) {
                                 event.preventDefault();
                                 event.stopPropagation();
@@ -134,6 +136,7 @@ function markRelations(known, parent, relatedMap) {
                                 event.stopPropagation();
                             })
 
+                            //add the tooltip for adding the relation
                             const popup = document.createElement('div');
                             popup.classList.add("popup_content");
 
@@ -143,6 +146,7 @@ function markRelations(known, parent, relatedMap) {
                             targetElement.appendChild(popup);
 
 
+                            //create and add the canvas for drawing the relation link
                             const canvas = document.createElement("canvas");
                             canvas.style.zIndex = -1;
                             canvas.style.position = "absolute";
