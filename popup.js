@@ -278,6 +278,11 @@ async function parse_dom(dom) {
 }
 
 
+document.getElementById("showGraph").addEventListener('click', () => {
+    chrome.tabs.create({url: "/graph/index.html"})
+})
+
+
 
 
 //identify all the concepts in the parsed Map that are already present in the loaded Map
