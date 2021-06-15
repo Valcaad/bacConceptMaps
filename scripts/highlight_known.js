@@ -1,6 +1,5 @@
 async function highlight_known() {
 
-    let keywords_known;
     let loadedMap;
 
     let instance = new Mark(document.body.querySelectorAll("P"));
@@ -36,6 +35,9 @@ async function highlight_known() {
                     parent = parent.parentNode;
                 }
 
+                parent.style.zIndex = 0;
+                parent.style.position = "relative";
+                
                 markRelations(elements[i], parent, loadedMap);
 
             }
@@ -62,7 +64,6 @@ function markRelations(known, parent, loadedMap) {
             //identify the tragets of this concept
             let count = 0;
             for (const target of targets) {
-
                 const sourceRect = known.getBoundingClientRect();
                 const classLabel = target.label.replace(/ /g, "_");
                 const targetElement = parent.getElementsByClassName("known_" + classLabel)[0];

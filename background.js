@@ -282,8 +282,12 @@ function putItem(loadedMap, item) {
             loadedMap.nodes.push({ "id": item.target.data.id, "label": item.target.data.label });
         }
 
+        if(loadedMap.edges.find(relation => relation.label === edge.label && relation.source === edge.source && relation.target === edge.target)){
 
-        loadedMap.edges.push(edge);
+        } else {
+            loadedMap.edges.push(edge);
+        }
+
     } else {
         if (loadedMap.nodes.find(node => node.label === item.concept.data.label)) {
             

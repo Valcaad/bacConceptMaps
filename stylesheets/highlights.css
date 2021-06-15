@@ -13,10 +13,11 @@ mark.related{
 }
 
 mark.new{
+    background: yellow;
     cursor: pointer;
     position: relative;
     display: inline-block;
-    cursor:pointer;
+
 }
 
 mark.clicked_on{

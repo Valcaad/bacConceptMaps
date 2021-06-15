@@ -41,6 +41,9 @@ async function highlight_interesting() {
                     parent = parent.parentNode;
                 }
 
+                parent.style.zIndex = 0;
+                parent.style.position = "relative";
+
                 unmark(instance, { "className": "related" })
 
                 removeCanvases();

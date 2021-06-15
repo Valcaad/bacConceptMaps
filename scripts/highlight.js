@@ -37,6 +37,9 @@ async function highlight() {
                 parent = parent.parentNode;
             }
 
+            parent.style.zIndex = 0;
+            parent.style.position = "relative";
+
             let parentInstance = new Mark(parent);
 
             const boundingRect = elements[i].getBoundingClientRect();
