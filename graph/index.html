@@ -4,6 +4,10 @@
 <head>
     <title>Concept Map Graph</title>
     <script src='cytoscape.js'></script>
+    <script src='./layouts/cola.min.js'></script>
+    <script src='./layouts/cytoscape-cola.js'></script>
+    <link rel="stylesheet" href="graphStyle.css">
+
 </head>
 <style>
     #cy {
@@ -17,6 +21,10 @@
 
 <body>
     <div id="cy"></div>
+    <div id="deleteContainer">
+        <p id = "deleteText"></p>
+        <button id="deleteBtn">Delete!</button>
+    </div>
     <script src='graph.js'></script>
     </script>
 </body>

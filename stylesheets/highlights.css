@@ -10,6 +10,8 @@ mark.related{
     position: relative;
     display: inline-block;
     cursor: pointer;
+    padding-left: 3px;
+    padding-right: 3px;
 }
 
 mark.new{

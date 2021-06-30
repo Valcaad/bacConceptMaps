@@ -1,0 +1,6 @@
+#deleteContainer{
+    visibility: hidden;
+    position: absolute;
+    border: solid;
+    padding: 5px;
+}

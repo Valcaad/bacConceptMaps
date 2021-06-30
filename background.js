@@ -77,6 +77,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             });
         });
     }
+    else{
+        console.log(request.message);
+    }
 });
 
 function create_database() {
@@ -293,6 +296,89 @@ function putItem(loadedMap, item) {
             
         } else {
             loadedMap.nodes.push({ "id": item.concept.data.id, "label": item.concept.data.label });
+        }
+    }
+
+    return loadedMap;
+}
+
+function delete_record(item){
+
+    let loadedMap;
+
+    return new Promise(function (resolve) {
+        chrome.storage.local.get('loadedMap', function (result) {
+            if (result.loadedMap) {
+                loadedMap = result.loadedMap;
+
+                console.log('received request');
+                loadedMap = removeItem(loadedMap, item);
+
+                const request = indexedDB.open('ConceptMapDB');
+                request.onerror = function (event) {
+                    console.log("Problem opening DB.");
+                }
+                request.onupgradeneeded = function (event) {
+                    db = event.target.result;
+                }
+                request.onsuccess = function (event) {
+                    db = event.target.result;
+                    console.log("DB opened");
+
+                    const update_transaction = db.transaction("conceptMaps",
+                        "readwrite");
+                    const objectStore = update_transaction.objectStore("conceptMaps");
+
+                    update_transaction.oncomplete = function () {
+                        console.log("ALL UPDATE TRANSACTIONS COMPLETE.");
+                        chrome.storage.local.set({ "loadedMap": loadedMap });
+                        return resolve(true);
+                    }
+                    update_transaction.onerror = function () {
+                        console.log("PROBLEM UPDATING RECORDS.")
+                        return resolve(false);
+                    }
+                    objectStore.put(loadedMap);
+                    db.onerror = function (event) {
+                        console.log("FAILED TO OPEN DB.")
+                    }
+                }
+            }
+        })
+
+    })
+}
+
+function removeItem(loadedMap, item){
+    let type = item.type;
+    let removeObject = item.data;
+
+    if( type === 'edge'){
+
+        for(let i = 0; i < loadedMap.edges.length; i++){
+            let edge = loadedMap.edges[i];
+            if(edge.source === removeObject.source && edge.target === removeObject.target && edge.label === removeObject.label){
+                loadedMap.edges.splice(i, 1);
+            }
+        }
+
+    } else if ( type === 'node'){
+
+        for (let i = 0; i < loadedMap.nodes.length; i++){
+            let node = loadedMap.nodes[i];
+            if(node.id === removeObject.id && node.label === removeObject.label){
+                loadedMap.nodes.splice(i,1);
+            }
+        }
+
+        let j = 0;
+        while(j < loadedMap.edges.length){
+            let edge = loadedMap.edges[j];
+            if(edge.source === removeObject.id || edge.target === removeObject.id){
+                loadedMap.edges.splice(j,1);
+            } else {
+                ++j;
+            }
         }
     }
 
