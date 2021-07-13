@@ -1,6 +1,7 @@
 async function highlight_interesting() {
     let keywords_known;
     let relatedMap;
+    let positionedParents = [];
 
     let instance = new Mark(document.body.querySelectorAll("P"));
 
@@ -35,6 +36,8 @@ async function highlight_interesting() {
         for (let i = 0; i < elements.length; i++) {
 
             elements[i].addEventListener('mouseover', function () {
+
+               positionedParents = depositionParents(positionedParents);
                 let parent = elements[i].parentNode;
 
                 while (parent.nodeName != "P") {
@@ -44,11 +47,14 @@ async function highlight_interesting() {
                 parent.style.zIndex = 0;
                 parent.style.position = "relative";
 
+               positionedParents.push(parent);
+
                 unmark(instance, { "className": "related" })
 
                 removeCanvases();
 
                 markRelations(elements[i], parent, relatedMap);
+
             })
         }
     })
@@ -96,7 +102,7 @@ function markRelations(known, parent, relatedMap) {
                 const options = {
                     "acrossElements": true,
                     "className": "related related_" + classLabel,
-                    "exclude": [".popup_content"]
+                    "exclude": [".popup_content", ".related"]
                 }
                 let regex = new RegExp(`\\b${target.data.label}\\b`, 'gi');
                 instance.markRegExp(regex, options);
@@ -113,16 +119,19 @@ function markRelations(known, parent, relatedMap) {
                     if (targetParent === parent) {
 
                         const relation = relations.find(edge => edge.data.target === target.data.id);
+                        const url = window.location.href;
+                        const sourceText = parent.innerText;
 
                         const targetRect = targetElement.getBoundingClientRect();
                         if (sourceRect.top <= targetRect.top && !(sourceRect.top == targetRect.top && targetRect.right < sourceRect.left)) {
+
 
                             //request to add the relation, incl. source and target concept to the current map
                             targetElement.addEventListener('click', function (event) {
                                 event.preventDefault();
                                 event.stopPropagation();
                                 let payload = {
-                                    relation, concept, target
+                                    relation, concept, target, url, sourceText
                                 }
 
                                 chrome.runtime.sendMessage({
@@ -233,6 +242,14 @@ function unmark(instance, options) {
     for (i = popups.length - 1; i >= 0; i--) {
         popups[i].remove();
     }
+}
+
+function depositionParents(positionedParents){
+    for (const parent of positionedParents) {
+        parent.removeAttribute('style');
+    }
+    positionedParents = [];
+    return positionedParents;
 }
 
 highlight_interesting();

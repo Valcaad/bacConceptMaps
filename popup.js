@@ -544,7 +544,7 @@ function aggregateConcepts(parsedMap) {
 }
 
 
-//analyze text selection
+/* //analyze text selection
 document.getElementById("selectionBtn").addEventListener('click', async () => {
 
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -601,4 +601,4 @@ async function analyse_selection(text) {
     const responseObject = await response.json();
     console.log(responseObject);
     return responseObject;
-}
+} */

@@ -88,13 +88,16 @@ async function highlight() {
                     for (const target of targets) {
                         const classLabel = target.data.label.replace(/ /g, "_").replace(/'/g, "");
 
-                        options = {
-                            "acrossElements": true,
-                            "className": "related related_" + classLabel,
-                            "exclude": [".popup_content"]
+
+                        if (document.getElementsByClassName("related_" + classLabel).length == 0) {
+                            options = {
+                                "acrossElements": true,
+                                "className": "related related_" + classLabel,
+                                "exclude": [".popup_content"]
+                            }
+                            let regex = new RegExp(`\\b${target.data.label}\\b`, 'gi');
+                            parentInstance.markRegExp(regex, options);
                         }
-                        let regex = new RegExp(`\\b${target.data.label}\\b`, 'gi');
-                        parentInstance.markRegExp(regex, options);
 
                         const sourceRect = elements[i].getBoundingClientRect();
                         const targetElements = document.getElementsByClassName("related_" + classLabel);
@@ -107,6 +110,9 @@ async function highlight() {
                             if (targetParent === parent) {
                                 const relation = relations.find(edge => edge.data.target === target.data.id);
 
+                                const url = window.location.href;
+                                const sourceText = parent.innerText;
+
                                 const targetRect = targetElement.getBoundingClientRect();
 
                                 if (sourceRect.top <= targetRect.top && !(sourceRect.top == targetRect.top && targetRect.right < sourceRect.left)) {
@@ -115,7 +121,7 @@ async function highlight() {
                                     targetElement.addEventListener('click', function (event) {
                                         event.preventDefault();
                                         let payload = {
-                                            relation, concept, target
+                                            relation, concept, target, url, sourceText
                                         }
 
                                         chrome.runtime.sendMessage({
@@ -126,13 +132,17 @@ async function highlight() {
                                     })
 
                                     //add the tooltip for adding the relation
-                                    const popup = document.createElement('div');
-                                    popup.classList.add("popup_content");
+                                    console.log(targetElement.childNodes.length)
+                                    if(!(targetElement.childNodes.length > 1)){
+                                        const popup = document.createElement('div');
+                                        popup.classList.add("popup_content");
+    
+                                        popup.style.left = (targetRect.right - targetRect.left) / 2 - 150 + "px";
+                                        popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to Map";
+    
+                                        targetElement.appendChild(popup);
+                                    }
 
-                                    popup.style.left = (targetRect.right - targetRect.left) / 2 - 150 + "px";
-                                    popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to Map";
-
-                                    targetElement.appendChild(popup);
 
 
                                     //create and add the canvas for the relation link

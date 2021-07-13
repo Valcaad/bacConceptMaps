@@ -1,6 +1,65 @@
-#deleteContainer{
-    visibility: hidden;
+#menuContainer{
+    visibility: visible;
     position: absolute;
     border: solid;
     padding: 5px;
+    width: 300px;
+    overflow: hidden;
+    background: white;
+}
+
+#deleteContainer{
+    visibility:hidden;
+}
+
+h1{
+    margin: 0px;
+    align-self: center;
+}
+
+p{
+    margin: 10px;
+    margin-left: 0px;
+}
+
+
+#tooltip{
+    background: white;
+    border: 1px solid #ddd;
+    width: 300px;
+    height: auto;
+    font-weight: 300;
+    color: rgb(39,44,45);
+    font-size: 13px;
+    position: absolute;
+    top: 30px;
+    cursor: default;
+    white-space: pre-line;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    visibility: hidden;
+}
+
+#tooltip:after, #tooltip:before {
+	bottom: 100%;
+	left: 50%;
+	border: solid transparent;
+	content: "";
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
+}
+
+#tooltip:after {
+	border-color: rgba(136, 183, 213, 0);
+	border-bottom-color: white;
+	border-width: 5px;
+	margin-left: -5px;
+}
+#tooltip:before {
+	border-color: rgba(194, 225, 245, 0);
+	border-bottom-color: #ddd;
+	border-width: 11px;
+	margin-left: -11px;
 }

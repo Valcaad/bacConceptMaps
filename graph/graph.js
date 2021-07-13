@@ -73,7 +73,9 @@ async function drawGraph() {
                         id: 'edge' + i,
                         source: loadedMap.edges[i].source,
                         target: loadedMap.edges[i].target,
-                        'label': loadedMap.edges[i].label
+                        'label': loadedMap.edges[i].label,
+                        'url': loadedMap.edges[i].url,
+                        'sourceText': loadedMap.edges[i].sourceText
                     }
                 })
             }
@@ -103,6 +105,27 @@ async function drawGraph() {
                 }
 
             })
+
+            cy.on('mouseover', 'edge', function(event){
+                let edge = event.target;
+                const tooltip = document.getElementById('tooltip');
+                tooltip.style.visibility = 'visible';
+                tooltip.style.left = (event.renderedPosition.x - 150) + "px";
+                tooltip.style.top = (event.renderedPosition.y) + "px";
+                if(edge.data('url')){
+                    tooltip.innerText = edge.data('sourceText') + '\n\n' + 'Source: ' + edge.data('url');
+                } else {
+                    tooltip.innerText = "No source available";
+                }
+
+            })
+
+            cy.on('mouseout', 'edge', function(event){
+                document.getElementById('tooltip').style.visibility = 'hidden';
+            })
+
+            const menu = document.getElementById('mapName');
+            menu.innerText = loadedMap.name;
 
         }
     })

@@ -272,7 +272,7 @@ function putItem(loadedMap, item) {
     let node;
 
     if (item.relation !== undefined && item.target !== undefined) {
-        let edge = { "label": item.relation.data.label, "source": item.relation.data.source, "target": item.relation.data.target };
+        let edge = { "label": item.relation.data.label, "source": item.relation.data.source, "target": item.relation.data.target, "url": item.url, "sourceText": item.sourceText };
 
         if (node = loadedMap.nodes.find(node => node.label === item.concept.data.label)) {
             edge.source = node.id;
