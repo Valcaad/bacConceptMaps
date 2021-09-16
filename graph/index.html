@@ -23,10 +23,30 @@
     <div id="cy"></div>
     <div id="menuContainer">
         <h1 id = "mapName"></h1>
-        <div id = "deleteContainer">
-            <p id = "deleteText">Whitespace</p>
+        <button class="newContentBtn" id="fitMap">fit Map</button>
+        <div id = "deleteContainer" class = "deleteContainer">
+            <p id= "descriptor" class="text">Concept: </p>
+            <div id = "deleteText" class = "text">Whitespace</div>
+            <div id="editBtns" class = "buttonContainer">
             <button id="deleteBtn">Delete!</button>
+            <button id="editBtn">Edit</button>
         </div>
+        </div>
+        <div id = "newBtns" class="buttonContainer">
+            <button class="newContentBtn" id="conceptCreator">new Concept</button>
+            <button class="newContentBtn" id="relationCreator">new Relation</button>
+
+        </div>
+    </div>
+    <div class="newContents" id="createConceptContainer">
+        <textarea class="newContentText" id="newConceptName" placeholder="Concept..."></textarea>
+        <button id="submitConceptCreation">Submit!</button>
+    </div>
+    <div class="newContents" id="createRelationContainer">
+        <textarea class="newContentText" id="newRelationSource" placeholder="Concept..."></textarea>
+        <textarea class="newContentText" id="newRelationLabel" placeholder="Relation..."></textarea>
+        <textarea class="newContentText" id="newRelationTarget" placeholder="Concept..."></textarea>
+        <button id="submitRelationCreation">Submit!</button>
     </div>
     <div id="tooltip"></div>
     <script src='graph.js'></script>

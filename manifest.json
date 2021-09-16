@@ -1,6 +1,6 @@
 {
     "name": "Concept Extractor",
-    "description": "load concept maps or extract from site",
+    "description": "Extract suggestions from websites to build concept maps",
     "version": "0.1.0",
     "manifest_version": 3,
     "background": {
@@ -10,8 +10,7 @@
         {
             "matches": ["<all_urls>"],
             "js": [
-                "scripts/mark.min.js",
-                "scripts/storage.js"
+                "scripts/mark.min.js"
             ],
             "css": [
                 "stylesheets/highlights.css"
@@ -19,6 +18,7 @@
             "run_at": "document_idle"
         }
     ],
+    "options_page": "options.html",
     "web_accessible_resources": [],
     "action": {
         "default_popup": "popup.html"

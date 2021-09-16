@@ -20,7 +20,8 @@ async function highlight_interesting() {
         //highlight the relevant concepts
         for (const node of keywords_known) {
 
-            const classLabel = node.data.label.replace(/ /g, "_").replace(/'/g, "");
+            let classLabel = node.data.label;
+            classLabel = classLabel.replace(/ /g, "_").replace(/'/g, "");
             let options = {
                 "acrossElements": true,
                 "className": "known known_" + classLabel
@@ -35,9 +36,12 @@ async function highlight_interesting() {
         //add the mouseover event to highlight the concepts relations
         for (let i = 0; i < elements.length; i++) {
 
-            elements[i].addEventListener('mouseover', function () {
+            elements[i].addEventListener('mouseover', function (e) {
 
-               positionedParents = depositionParents(positionedParents);
+                //e.preventDefault();
+                e.stopPropagation();
+
+                positionedParents = depositionParents(positionedParents);
                 let parent = elements[i].parentNode;
 
                 while (parent.nodeName != "P") {
@@ -47,7 +51,7 @@ async function highlight_interesting() {
                 parent.style.zIndex = 0;
                 parent.style.position = "relative";
 
-               positionedParents.push(parent);
+                positionedParents.push(parent);
 
                 unmark(instance, { "className": "related" })
 
@@ -55,6 +59,11 @@ async function highlight_interesting() {
 
                 markRelations(elements[i], parent, relatedMap);
 
+            })
+
+            elements[i].addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation()
             })
         }
     })
@@ -80,7 +89,8 @@ function filterForUnrelated(knownConcepts, relatedMap) {
 function markRelations(known, parent, relatedMap) {
     let instance = new Mark(parent);
 
-    let concept = relatedMap.nodes.find(node => node.data.label.toLowerCase() === known.innerText.toLowerCase());
+    const conceptName = known.classList[1].substring(6).replace(/_/g, ' ');
+    let concept = relatedMap.nodes.find(node => node.data.label.toLowerCase() === conceptName.toLowerCase());
 
     if (concept) {
         let relations = relatedMap.edges.filter(edge => edge.data.source === concept.data.id);
@@ -94,11 +104,11 @@ function markRelations(known, parent, relatedMap) {
                 targets.push(target);
             }
 
-
             //highlight all the targets
             let count = 0;
             for (const target of targets) {
-                const classLabel = target.data.label.replace(/ /g, "_").replace(/'/g, "");
+                let classLabel = target.data.label;
+                classLabel = classLabel.replace(/ /g, "_").replace(/'/g, "");
                 const options = {
                     "acrossElements": true,
                     "className": "related related_" + classLabel,
@@ -125,7 +135,6 @@ function markRelations(known, parent, relatedMap) {
                         const targetRect = targetElement.getBoundingClientRect();
                         if (sourceRect.top <= targetRect.top && !(sourceRect.top == targetRect.top && targetRect.right < sourceRect.left)) {
 
-
                             //request to add the relation, incl. source and target concept to the current map
                             targetElement.addEventListener('click', function (event) {
                                 event.preventDefault();
@@ -135,10 +144,10 @@ function markRelations(known, parent, relatedMap) {
                                 }
 
                                 chrome.runtime.sendMessage({
-                                    message: 'update',
+                                    message: 'add',
                                     payload: payload
                                 });
-                                alert("add '" + concept.data.label + " ... " + relation.data.label + " ... " + target.data.label + "' to Map");
+                                alert("'" +concept.data.label + " ... " + relation.data.label + " ... " + target.data.label + "' has been added to the Map");
 
                                 removeCanvases();
                             })
@@ -153,7 +162,7 @@ function markRelations(known, parent, relatedMap) {
                             popup.classList.add("popup_content");
 
                             popup.style.left = (targetRect.right - targetRect.left) / 2 - 150 + "px";
-                            popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to Map";
+                            popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to the Map";
 
                             targetElement.appendChild(popup);
 
@@ -244,7 +253,7 @@ function unmark(instance, options) {
     }
 }
 
-function depositionParents(positionedParents){
+function depositionParents(positionedParents) {
     for (const parent of positionedParents) {
         parent.removeAttribute('style');
     }

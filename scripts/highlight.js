@@ -43,7 +43,9 @@ async function highlight() {
             let parentInstance = new Mark(parent);
 
             const boundingRect = elements[i].getBoundingClientRect();
-            let concept = parsedMap.nodes.find(node => node.data.label.toLowerCase() === elements[i].innerText.toLowerCase());
+
+            const conceptName = keywords[0];
+            let concept = parsedMap.nodes.find(node => node.data.label.toLowerCase() === conceptName.toLowerCase());
             if (concept) {
 
                 //add the tooltip for clicking a highlighted concept
@@ -51,7 +53,7 @@ async function highlight() {
                 sourcePopup.classList.add("popup_content");
 
                 sourcePopup.style.left = (boundingRect.right - boundingRect.left) / 2 - 150 + "px";
-                sourcePopup.innerText = "click to add '" + concept.data.label + "' to Map";
+                sourcePopup.innerText = "click to add '" + concept.data.label + "' to the Map";
 
                 elements[i].appendChild(sourcePopup);
 
@@ -64,10 +66,10 @@ async function highlight() {
                     }
 
                     chrome.runtime.sendMessage({
-                        message: 'update',
+                        message: 'add',
                         payload: payload
                     });
-                    alert("add '" + concept.data.label + "' to Map");
+                    alert("'" + concept.data.label + "' has been added to the Map");
                 })
 
                 //get all relations of this concept
@@ -86,7 +88,9 @@ async function highlight() {
                     //highlight all the targets
                     let count = 0;
                     for (const target of targets) {
-                        const classLabel = target.data.label.replace(/ /g, "_").replace(/'/g, "");
+
+                        let classLabel = target.data.label;
+                        classLabel = classLabel.replace(/ /g, "_").replace(/'/g, "");
 
 
                         if (document.getElementsByClassName("related_" + classLabel).length == 0) {
@@ -125,20 +129,19 @@ async function highlight() {
                                         }
 
                                         chrome.runtime.sendMessage({
-                                            message: 'update',
+                                            message: 'add',
                                             payload: payload
                                         });
-                                        alert("add '" + concept.data.label + " ... " + relation.data.label + " ... " + target.data.label + "' to Map");
+                                        alert("'" + concept.data.label + " ... " + relation.data.label + " ... " + target.data.label + "' has been added to the Map");
                                     })
 
                                     //add the tooltip for adding the relation
-                                    console.log(targetElement.childNodes.length)
                                     if(!(targetElement.childNodes.length > 1)){
                                         const popup = document.createElement('div');
                                         popup.classList.add("popup_content");
     
                                         popup.style.left = (targetRect.right - targetRect.left) / 2 - 150 + "px";
-                                        popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to Map";
+                                        popup.innerText = "click to add '" + concept.data.label + " " + relation.data.label + " " + target.data.label + "' to the Map";
     
                                         targetElement.appendChild(popup);
                                     }

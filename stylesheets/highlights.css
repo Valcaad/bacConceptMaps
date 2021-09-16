@@ -3,6 +3,8 @@ mark.known{
     position: relative;
     display: inline-block;
     cursor: pointer;
+    padding-left: 3px;
+    padding-right: 3px;
 }
 
 mark.related{
@@ -14,11 +16,13 @@ mark.related{
     padding-right: 3px;
 }
 
-mark.new{
+mark.new_mark{
     background: yellow;
     cursor: pointer;
     position: relative;
     display: inline-block;
+    padding-left: 3px;
+    padding-right: 3px;
 
 }
 
@@ -27,6 +31,8 @@ mark.clicked_on{
     position:relative;
     display: inline-block;
     cursor:pointer;
+    padding-left: 3px;
+    padding-right: 3px;
 }
 
 .popup_content{
@@ -70,13 +76,13 @@ mark.clicked_on{
 	margin-left: -11px;
 }
 
-.known > .popup_content, .related > .popup_content, .new > .popup_content, .clicked_on > .popup_content{
+.known > .popup_content, .related > .popup_content, .new_mark > .popup_content, .clicked_on > .popup_content{
     visibility: hidden;
     opacity:0;
     transition: visibility 0s linear 0.4s, opacity 0.4s linear;
 }
 
-.known:hover > .popup_content, .related:hover > .popup_content, .new:hover > .popup_content, .clicked_on:hover > .popup_content {
+.known:hover > .popup_content, .related:hover > .popup_content, .new_mark:hover > .popup_content, .clicked_on:hover > .popup_content {
     visibility: visible;
     opacity: 1;
     transition-delay: 0.1s;

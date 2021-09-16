@@ -14,7 +14,8 @@ async function highlight_known() {
             //highlight all the concepts in the known map
             for (const node of loadedMap.nodes) {
 
-                const classLabel = node.label.replace(/ /g, "_");
+                let classLabel = node.label;
+                classLabel = classLabel.replace(/ /g, "_");
                 let options = {
                     "acrossElements": true,
                     "className": "known known_" + classLabel
@@ -40,6 +41,11 @@ async function highlight_known() {
                 
                 markRelations(elements[i], parent, loadedMap);
 
+                elements[i].addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                })
+
             }
         }
     })
@@ -47,7 +53,8 @@ async function highlight_known() {
 
 function markRelations(known, parent, loadedMap) {
 
-    let concept = loadedMap.nodes.find(node => node.label.toLowerCase() === known.innerText.toLowerCase());
+    const conceptName = known.classList[1].substring(6).replace(/_/g, ' ');
+    let concept = loadedMap.nodes.find(node => node.label.toLowerCase() === conceptName.toLowerCase());
 
     if (concept) {
         let relations = loadedMap.edges.filter(edge => edge.source === concept.id);

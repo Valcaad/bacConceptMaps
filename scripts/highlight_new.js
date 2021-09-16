@@ -20,49 +20,54 @@ async function highlight_new() {
 
             //highlight the concepts listed in unknownConcepts
             for (const node of unknownConcepts) {
-                const classLabel = node.data.label.replace(/ /g, "_").replace(/'/g, "");
+                let classLabel = node.data.label;
+                classLabel = classLabel.replace(/ /g, "_").replace(/'/g, "");
                 let options = {
                     "acrossElements": true,
-                    "className": "new new_" + classLabel
+                    "className": "new_mark new_" + classLabel
                 }
 
                 let regex = new RegExp(`\\b${node.data.label}\\b`, 'gi');
                 instance.markRegExp(regex, options);
             }
 
-            let elements = document.getElementsByClassName("new");
+            let elements = document.getElementsByClassName("new_mark");
 
             for (let i = 0; i < elements.length; i++) {
 
                 const boundingRect = elements[i].getBoundingClientRect();
 
-                const concept = unknownConcepts.find(node => node.data.label.toLowerCase() === elements[i].innerText.toLowerCase());
+                const conceptName = elements[i].classList[1].substring(4).replace(/_/g, ' ');
+                const concept = unknownConcepts.find(node => node.data.label.toLowerCase() === conceptName.toLowerCase());
 
-                //add the tooltip for adding a concept
-                const popup = document.createElement('div');
-                popup.classList.add("popup_content");
+                if (concept) {
+                    //add the tooltip for adding a concept
+                    const popup = document.createElement('div');
+                    popup.classList.add("popup_content");
 
-                popup.style.left = (boundingRect.right - boundingRect.left) / 2 - 150 + "px";
-                popup.innerText = "click to add '" + concept.data.label + "' to Map";
+                    popup.style.left = (boundingRect.right - boundingRect.left) / 2 - 150 + "px";
+                    popup.innerText = "click to add '" + concept.data.label + "' to the Map";
 
-                elements[i].appendChild(popup);
+                    elements[i].appendChild(popup);
 
 
-                //request to add the concept to current map
-                elements[i].addEventListener('click', function (event) {
-                    event.preventDefault();
+                    //request to add the concept to current map
+                    elements[i].addEventListener('click', function (event) {
+                        event.preventDefault();
 
-                    let payload = {
-                        undefined, concept, undefined
-                    }
+                        let payload = {
+                            undefined, concept, undefined
+                        }
 
-                    chrome.runtime.sendMessage({
-                        message: 'update',
-                        payload: payload
-                    });
+                        chrome.runtime.sendMessage({
+                            message: 'add',
+                            payload: payload
+                        });
 
-                    alert("add " + concept.data.label + " to map");
-                })
+                        alert("'" + concept.data.label + "' has been added to the map");
+                    })
+
+                }
             }
         }
     })

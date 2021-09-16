@@ -1,5 +1,4 @@
 let db = null;
-let stock = [{ "name": "games", "edges": [{ "label": "received", "source": "0", "target": "1" }], "nodes": [{ "id": "0", "label": "Candleman" }, { "id": "1", "label": "positive reviews" }] }]
 chrome.runtime.onInstalled.addListener(() => {
     create_database();
 
@@ -54,7 +53,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 
     }
-    //update an item in the Database
+    //add an item to an existing Database
+    else if (request.message === 'add') {
+        let add_request = add_record(request.payload);
+
+        add_request.then(res => {
+            chrome.runtime.sendMessage({
+                message: 'add_success',
+                payload: res
+            });
+        });
+
+    }
+    //add an item to an existing Database
     else if (request.message === 'update') {
         let update_request = update_record(request.payload);
 
@@ -77,8 +88,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             });
         });
     }
-    else{
-        console.log(request.message);
+    else {
+        console.log("unknown request: " + request.message);
     }
 });
 
@@ -99,7 +110,6 @@ function create_database() {
     request.onsuccess = function (event) {
         db = event.target.result;
         console.log("DB OPENED.");
-        insert_records(stock);
         db.onerror = function (event) {
             console.log("FAILED TO OPEN DB.")
         }
@@ -108,6 +118,8 @@ function create_database() {
 
 //insert an array of new records into the indexedDB
 function insert_records(records) {
+
+    let res = { "value": true, "text": "" }
 
     return new Promise(function (resolve) {
         const request = indexedDB.open('ConceptMapDB');
@@ -127,7 +139,7 @@ function insert_records(records) {
 
             insert_transaction.oncomplete = function () {
                 console.log("ALL INSERT TRANSACTIONS COMPLETE.");
-                return resolve(true);
+                return resolve(res);
             }
             insert_transaction.onerror = function () {
                 console.log("PROBLEM INSERTING RECORDS.")
@@ -137,6 +149,7 @@ function insert_records(records) {
                 let request = objectStore.add(conceptMap);
                 request.onsuccess = function () {
                     console.log("Added: ", conceptMap);
+                    res.text = conceptMap.name;
                 }
             });
 
@@ -221,7 +234,7 @@ function get_keys() {
 }
 
 //update the given item in the concept map database
-function update_record(item) {
+function add_record(item) {
     let loadedMap;
 
     return new Promise(function (resolve) {
@@ -242,17 +255,17 @@ function update_record(item) {
                     db = event.target.result;
                     console.log("DB opened");
 
-                    const update_transaction = db.transaction("conceptMaps",
+                    const add_transaction = db.transaction("conceptMaps",
                         "readwrite");
-                    const objectStore = update_transaction.objectStore("conceptMaps");
+                    const objectStore = add_transaction.objectStore("conceptMaps");
 
-                    update_transaction.oncomplete = function () {
-                        console.log("ALL UPDATE TRANSACTIONS COMPLETE.");
+                    add_transaction.oncomplete = function () {
+                        console.log("ALL ADD TRANSACTIONS COMPLETE.");
                         chrome.storage.local.set({ "loadedMap": loadedMap });
                         return resolve(true);
                     }
-                    update_transaction.onerror = function () {
-                        console.log("PROBLEM UPDATING RECORDS.")
+                    add_transaction.onerror = function () {
+                        console.log("PROBLEM ADDING RECORDS.")
                         return resolve(false);
                     }
                     objectStore.put(loadedMap);
@@ -285,7 +298,7 @@ function putItem(loadedMap, item) {
             loadedMap.nodes.push({ "id": item.target.data.id, "label": item.target.data.label });
         }
 
-        if(loadedMap.edges.find(relation => relation.label === edge.label && relation.source === edge.source && relation.target === edge.target)){
+        if (loadedMap.edges.find(relation => relation.label === edge.label && relation.source === edge.source && relation.target === edge.target)) {
 
         } else {
             loadedMap.edges.push(edge);
@@ -293,7 +306,7 @@ function putItem(loadedMap, item) {
 
     } else {
         if (loadedMap.nodes.find(node => node.label === item.concept.data.label)) {
-            
+
         } else {
             loadedMap.nodes.push({ "id": item.concept.data.id, "label": item.concept.data.label });
         }
@@ -302,8 +315,8 @@ function putItem(loadedMap, item) {
     return loadedMap;
 }
 
-function delete_record(item){
-
+//update the given item in the concept map database
+function update_record(item) {
     let loadedMap;
 
     return new Promise(function (resolve) {
@@ -311,8 +324,7 @@ function delete_record(item){
             if (result.loadedMap) {
                 loadedMap = result.loadedMap;
 
-                console.log('received request');
-                loadedMap = removeItem(loadedMap, item);
+                loadedMap = updateItem(loadedMap, item);
 
                 const request = indexedDB.open('ConceptMapDB');
                 request.onerror = function (event) {
@@ -330,11 +342,71 @@ function delete_record(item){
                     const objectStore = update_transaction.objectStore("conceptMaps");
 
                     update_transaction.oncomplete = function () {
-                        console.log("ALL UPDATE TRANSACTIONS COMPLETE.");
+                        console.log("ALL ADD TRANSACTIONS COMPLETE.");
                         chrome.storage.local.set({ "loadedMap": loadedMap });
                         return resolve(true);
                     }
                     update_transaction.onerror = function () {
+                        console.log("PROBLEM ADDING RECORDS.")
+                        return resolve(false);
+                    }
+                    objectStore.put(loadedMap);
+                    db.onerror = function (event) {
+                        console.log("FAILED TO OPEN DB.")
+                    }
+                }
+            }
+        })
+    })
+}
+
+function updateItem(loadedMap,item){
+    if(item.type === 'node'){
+        let candidate = loadedMap.nodes.find(node => node.id === item.data.id);
+        if(candidate){
+            candidate.label = item.data.newLabel;
+        }
+    } else if (item.type === 'edge') {
+        let candidate = loadedMap.edges.find(edge => edge.source === item.data.source && edge.target === item.data.target);
+        if(candidate){
+            candidate.label = item.data.newLabel;
+        }
+    }
+    return loadedMap;
+}
+
+function delete_record(item) {
+
+    let loadedMap;
+
+    return new Promise(function (resolve) {
+        chrome.storage.local.get('loadedMap', function (result) {
+            if (result.loadedMap) {
+                loadedMap = result.loadedMap;
+
+                loadedMap = removeItem(loadedMap, item);
+
+                const request = indexedDB.open('ConceptMapDB');
+                request.onerror = function (event) {
+                    console.log("Problem opening DB.");
+                }
+                request.onupgradeneeded = function (event) {
+                    db = event.target.result;
+                }
+                request.onsuccess = function (event) {
+                    db = event.target.result;
+                    console.log("DB opened");
+
+                    const delete_transaction = db.transaction("conceptMaps",
+                        "readwrite");
+                    const objectStore = delete_transaction.objectStore("conceptMaps");
+
+                    delete_transaction.oncomplete = function () {
+                        console.log("ALL DELETE TRANSACTIONS COMPLETE.");
+                        chrome.storage.local.set({ "loadedMap": loadedMap });
+                        return resolve(true);
+                    }
+                    delete_transaction.onerror = function () {
                         console.log("PROBLEM UPDATING RECORDS.")
                         return resolve(false);
                     }
@@ -349,33 +421,33 @@ function delete_record(item){
     })
 }
 
-function removeItem(loadedMap, item){
+function removeItem(loadedMap, item) {
     let type = item.type;
     let removeObject = item.data;
 
-    if( type === 'edge'){
+    if (type === 'edge') {
 
-        for(let i = 0; i < loadedMap.edges.length; i++){
+        for (let i = 0; i < loadedMap.edges.length; i++) {
             let edge = loadedMap.edges[i];
-            if(edge.source === removeObject.source && edge.target === removeObject.target && edge.label === removeObject.label){
+            if (edge.source === removeObject.source && edge.target === removeObject.target && edge.label === removeObject.label) {
                 loadedMap.edges.splice(i, 1);
             }
         }
 
-    } else if ( type === 'node'){
+    } else if (type === 'node') {
 
-        for (let i = 0; i < loadedMap.nodes.length; i++){
+        for (let i = 0; i < loadedMap.nodes.length; i++) {
             let node = loadedMap.nodes[i];
-            if(node.id === removeObject.id && node.label === removeObject.label){
-                loadedMap.nodes.splice(i,1);
+            if (node.id === removeObject.id && node.label === removeObject.label) {
+                loadedMap.nodes.splice(i, 1);
             }
         }
 
         let j = 0;
-        while(j < loadedMap.edges.length){
+        while (j < loadedMap.edges.length) {
             let edge = loadedMap.edges[j];
-            if(edge.source === removeObject.id || edge.target === removeObject.id){
-                loadedMap.edges.splice(j,1);
+            if (edge.source === removeObject.id || edge.target === removeObject.id) {
+                loadedMap.edges.splice(j, 1);
             } else {
                 ++j;
             }

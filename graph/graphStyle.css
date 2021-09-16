@@ -1,11 +1,58 @@
-#menuContainer{
+#menuContainer {
     visibility: visible;
-    position: absolute;
+    position: relative;
     border: solid;
     padding: 5px;
     width: 300px;
     overflow: hidden;
     background: white;
+}
+
+.buttonContainer {
+    margin-bottom: 5px;
+}
+
+#mapName {
+    display: inline;
+}
+#deleteContainer {
+    position: relative;
+}
+
+.text {
+    display: inline-block;
+}
+
+#deleteBtn {
+    display: inline-block;
+}
+
+#editBtn {
+    display: inline-block;
+}
+
+#fitMap {
+    float:right;
+    margin-top: 8px;
+}
+#createConceptContainer, #createRelationContainer {
+    visibility: hidden;
+    position: absolute;
+    border: solid;
+    border-top: none;
+    padding: 5px;
+    width: 300px;
+    overflow: hidden;
+    background: white;
+}
+
+#createConceptContainer {
+    z-index: 2;
+}
+
+
+#createRelationContainer {
+    z-index: 3;
 }
 
 #deleteContainer{
