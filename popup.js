@@ -416,7 +416,7 @@ async function listConcepts(map) {
 
                 })
 
-                document.getElementById("feedback").innerText = "clicked on " + concept.data.id;
+                document.getElementById("feedback").innerText = '"' + concept.data.label + '" selected';
             })
             concept_list.appendChild(el);
 

@@ -149,7 +149,6 @@ function markRelations(known, parent, relatedMap) {
                                 });
                                 alert("'" +concept.data.label + " ... " + relation.data.label + " ... " + target.data.label + "' has been added to the Map");
 
-                                removeCanvases();
                             })
 
                             targetElement.addEventListener('mouseover', function (event) {
